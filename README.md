@@ -2,8 +2,11 @@
 
 This is a branch of https://github.com/NVIDIA-AI-IOT/torch2trt with dynamic input support
 
-Not all layer support dynamic input such as view, squeeze, stack, etc... You can create a custom layer from nvinfer1::IPluginV2DynamicExt to implement it.
-Custom plugins library will be published in future.
+Not all layer support dynamic input such as view, squeeze, stack, etc... 
+
+You can create a custom layer from nvinfer1::IPluginV2DynamicExt to implement it.
+
+Custom plugins library might be public in future.
 
 ## Usage
 
@@ -104,10 +107,4 @@ the following
 
 Please see [this folder](torch2trt/converters) for more examples.
 
-## See also
 
-- [JetBot](http://github.com/NVIDIA-AI-IOT/jetbot) - An educational AI robot based on NVIDIA Jetson Nano
-
-- [JetRacer](http://github.com/NVIDIA-AI-IOT/jetracer) - An educational AI racecar using NVIDIA Jetson Nano
-- [JetCam](http://github.com/NVIDIA-AI-IOT/jetcam) - An easy to use Python camera interface for NVIDIA Jetson
-- [JetCard](http://github.com/NVIDIA-AI-IOT/jetcard) - An SD card image for web programming AI projects with NVIDIA Jetson Nano
