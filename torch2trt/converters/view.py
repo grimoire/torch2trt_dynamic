@@ -2,16 +2,30 @@ from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
 
 
+@tensorrt_converter('torch.Tensor.flatten')
 @tensorrt_converter('torch.flatten')
 @tensorrt_converter('torch.Tensor.reshape')
 @tensorrt_converter('torch.Tensor.view')
+@tensorrt_converter('torch.Tensor.view_as')
+@tensorrt_converter('torch.Tensor.unsqueeze')
+@tensorrt_converter('torch.unsqueeze')
+@tensorrt_converter('torch.Tensor.squeeze')
+@tensorrt_converter('torch.squeeze')
 def convert_view(ctx):
+    support_dynamic_shape = False
+    if hasattr(ctx, "support_dynamic_shape"):
+        support_dynamic_shape = ctx.support_dynamic_shape
+        
     input = ctx.method_args[0]
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
     layer = ctx.network.add_shuffle(input_trt)
-    layer.reshape_dims = tuple(output.shape[1:])
+    if support_dynamic_shape:
+        layer.reshape_dims = output.shape
+    else:
+        layer.reshape_dims = tuple(output.shape[1:])
     output._trt = layer.get_output(0)
+
 
 
 class View(torch.nn.Module):

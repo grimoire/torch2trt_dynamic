@@ -7,10 +7,17 @@ def convert_transpose(ctx):
     input = ctx.method_args[0]
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
+    support_dynamic_shape = ctx.support_dynamic_shape
     # permutation -1 because TRT does not include batch dim
-    permutation = list(range(len(input.shape) - 1))
-    dim0 = ctx.method_args[1] - 1
-    dim1 = ctx.method_args[2] - 1
+
+    if support_dynamic_shape:
+        permutation = list(range(len(input.shape)))
+        dim0 = ctx.method_args[1]
+        dim1 = ctx.method_args[2]
+    else:
+        permutation = list(range(len(input.shape) - 1))
+        dim0 = ctx.method_args[1] - 1
+        dim1 = ctx.method_args[2] - 1
     permutation[dim0] = dim1
     permutation[dim1] = dim0
     layer = ctx.network.add_shuffle(input_trt)

@@ -11,7 +11,8 @@ def convert_BatchNorm2d(ctx):
     scale = module.weight.detach().cpu().numpy() / np.sqrt(module.running_var.detach().cpu().numpy() + module.eps)
     bias = module.bias.detach().cpu().numpy() - module.running_mean.detach().cpu().numpy() * scale
     power = np.ones_like(scale)
-    
-    layer = ctx.network.add_scale(input_trt, trt.ScaleMode.CHANNEL, bias, scale, power)
+
+    layer = ctx.network.add_scale(input_trt, trt.ScaleMode.CHANNEL, bias, scale, power)    
+
 
     output._trt = layer.get_output(0)

@@ -4,6 +4,7 @@ from torch2trt.module_test import add_module_test
 
 @tensorrt_converter('torch.nn.functional.sigmoid')
 @tensorrt_converter('torch.sigmoid')
+@tensorrt_converter('torch.Tensor.sigmoid')
 def convert_sigmoid(ctx):
     input = ctx.method_args[0]
     input_trt = trt_(ctx.network, input)

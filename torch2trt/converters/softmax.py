@@ -14,7 +14,8 @@ def convert_softmax(ctx):
     elif len(ctx.method_args) >= 2:
         dim = ctx.method_args[1]
 
-    axes = 1 << (dim - 1)
+    # axes = 1 << (dim - 1)
+    axes = 1<<dim
 
     layer = ctx.network.add_softmax(input=input_trt)
     layer.axes = axes

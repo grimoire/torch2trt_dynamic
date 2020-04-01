@@ -16,17 +16,20 @@ def convert_Linear(ctx):
     bias = trt.Weights(torch_dtype_to_trt(module.weight.dtype))
     if module.bias is not None:
         bias = module.bias.detach().cpu().numpy()
-        
+    
     # add fully connected
     layer = ctx.network.add_fully_connected(
         input=layer.get_output(0),
+        # input=input_trt,
         num_outputs=module.out_features,
         kernel=module.weight.detach().cpu().numpy(),
         bias=bias)
 
     # reshape back to N
     layer = ctx.network.add_shuffle(layer.get_output(0))
-    layer.reshape_dims = tuple(output.shape[1:])
+    # layer.reshape_dims = tuple(output.shape[1:])
+    # layer.reshape_dims = tuple(output.shape)
+    layer.reshape_dims = (-1,) + tuple(output.shape[1:])
 
     output._trt = layer.get_output(0)
 

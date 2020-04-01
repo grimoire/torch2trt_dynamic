@@ -50,8 +50,32 @@ from .split import *
 from .chunk import *
 from .unary import *
 
+# without plugin
+from .matmul import *
+from .interpolate_custom import *
+from .topk import *
+from .index_select import *
+from .addcmul import *
 
-try:
-    from .interpolate import *
-except:
-    pass
+# try:
+#     import mmdet
+#     # mmdet support
+#     from .DeformConv import *
+#     from .gaembedding import *
+#     from .exview import *
+#     from .carafekernelnormalize import *
+#     from .carafefeaturereassemble import *
+#     from .carafetensoradd import *
+#     from .RoiExtractor import *
+# except:
+#     print("import mmdet plugins failed, please make sure mmdet installed")
+
+# # custom plugin support
+# from .GroupNorm import *
+# from .LayerNorm import *
+# from .repeat import *
+
+# try:
+#     from .interpolate import *
+# except:
+#     print("import interpolate failed.")

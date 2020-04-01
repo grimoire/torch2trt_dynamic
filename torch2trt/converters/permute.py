@@ -4,6 +4,9 @@ from torch2trt.module_test import add_module_test
 
 @tensorrt_converter('torch.Tensor.permute')
 def convert_permute(ctx):
+    support_dynamic_shape = False
+    if hasattr(ctx, "support_dynamic_shape"):
+        support_dynamic_shape = ctx.support_dynamic_shape
     input = ctx.method_args[0]
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
@@ -13,10 +16,16 @@ def convert_permute(ctx):
         permutation = tuple(ctx.method_args[1:])  # handle permute(a, b, c)
     else:
         permutation = tuple(ctx.method_args[1])   # handle permute([a, b, c])
+
         
-    assert(permutation[0] == 0)  # cannot move batch dim
+    # assert(permutation[0] == 0)  # cannot move batch dim
     
-    trt_permutation = tuple([p - 1 for p in permutation])[1:]
+    # trt_permutation = tuple([p - 1 for p in permutation])[1:]
+    
+    if support_dynamic_shape:
+        trt_permutation = permutation
+    else:
+        trt_permutation = tuple([p - 1 for p in permutation])[1:]
     
     layer = ctx.network.add_shuffle(input_trt)
     layer.second_transpose = tuple(trt_permutation)

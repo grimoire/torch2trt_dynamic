@@ -1,7 +1,7 @@
 from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
 
-
+@tensorrt_converter('mmdet.models.utils.conv_ws.ConvWS2d.forward')
 @tensorrt_converter('torch.nn.Conv2d.forward')
 def convert_Conv2d(ctx):
     module = ctx.method_args[0]
