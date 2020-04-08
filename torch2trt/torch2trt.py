@@ -443,6 +443,10 @@ def torch2trt(module,
                 profile.set_shape(
                     input_names[input_index], min_shape, opt_shape, max_shape)
             config.add_optimization_profile(profile)
+            if fp16_mode:
+                config.set_flag(trt.BuilderFlag.FP16)
+            if int8_mode:
+                config.set_flag(trt.BuilderFlag.INT8)
 
     if int8_mode:
 
