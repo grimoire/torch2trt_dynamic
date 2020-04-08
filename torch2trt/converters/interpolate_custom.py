@@ -1,3 +1,4 @@
+import torch
 from torch2trt.torch2trt import *
 
 @tensorrt_converter('torch.nn.functional.interpolate')
@@ -31,7 +32,7 @@ def convert_interpolate(ctx):
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
     
-    if support_dynamic_shape:
+    if support_dynamic_shape and isinstance(size, torch.Size):
         if scale_factor is None:
             scale_factor = [1]*len(input.shape)
         for i in range(len(input.shape)):
