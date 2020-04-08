@@ -30,6 +30,13 @@ def convert_interpolate(ctx):
 
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
+    
+    if support_dynamic_shape:
+        if scale_factor is None:
+            scale_factor = [1]*len(input.shape)
+        for i in range(len(input.shape)):
+            scale_factor[i] = output.shape[i]/input.shape[i]
+
     layer = ctx.network.add_resize(input_trt)
     if scale_factor is not None:
         if isinstance(scale_factor, (float,int)):
@@ -48,10 +55,9 @@ def convert_interpolate(ctx):
         layer.resize_mode = trt.ResizeMode.NEAREST
     elif mode=="linear":
         layer.resize_mode = trt.ResizeMode.LINEAR
-        pass
     else:
-        layer.resize_mode = trt.ResizeMode.NEAREST
-        print("unknow inter type, use nearest insteed.")
+        layer.resize_mode = trt.ResizeMode.LINEAR
+        print("unknown interpolate type, use linear insteed.")
 
     output._trt = layer.get_output(0)
 
