@@ -13,12 +13,17 @@ def __convert_max_elementwise(ctx):
     
 
 def __convert_max_reduce(ctx):
+    support_dynamic_shape = False
+    if hasattr(ctx, "support_dynamic_shape"):
+        support_dynamic_shape = ctx.support_dynamic_shape
     input = ctx.method_args[0]
-    dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(1, input.ndim)))
+    if support_dynamic_shape:
+        dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(0, input.ndim)))
+    else:
+        dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(1, input.ndim)))
     keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
     input_trt= trt_(ctx.network, input)
-    output_val = ctx.method_return[0]
-    output_idx = ctx.method_return[1]
+    output_val = ctx.method_return
     layer = ctx.network.add_reduce(input_trt,  trt.ReduceOperation.MAX, torch_dim_to_trt_axes(dim), keepdim)
     output_val._trt = layer.get_output(0)
     
