@@ -445,20 +445,22 @@ def torch2trt(module,
             config.add_optimization_profile(profile)
             if fp16_mode:
                 config.set_flag(trt.BuilderFlag.FP16)
-            if int8_mode:
-                config.set_flag(trt.BuilderFlag.INT8)
-
+                
     if int8_mode:
 
         # default to use input tensors for calibration
         if int8_calib_dataset is None:
             int8_calib_dataset = TensorBatchDataset(inputs_in)
 
-        builder.int8_mode = True
-
-        # @TODO(jwelsh):  Should we set batch_size=max_batch_size?  Need to investigate memory consumption
-        builder.int8_calibrator = DatasetCalibrator(
-            inputs, int8_calib_dataset, batch_size=1, algorithm=int8_calib_algorithm)
+        if support_dynamic_shape:
+            config.set_flag(trt.BuilderFlag.INT8)
+            config.int8_calibrator = DatasetCalibrator(
+                inputs, int8_calib_dataset, batch_size=1, algorithm=int8_calib_algorithm)
+        else:
+            builder.int8_mode = True
+            # @TODO(jwelsh):  Should we set batch_size=max_batch_size?  Need to investigate memory consumption
+            builder.int8_calibrator = DatasetCalibrator(
+                inputs, int8_calib_dataset, batch_size=1, algorithm=int8_calib_algorithm)
 
     if support_dynamic_shape:
         engine = builder.build_engine(network, config)
