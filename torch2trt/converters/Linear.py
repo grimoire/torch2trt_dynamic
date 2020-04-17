@@ -11,7 +11,8 @@ def convert_Linear(ctx):
 
     # reshape to ...xNx1x1
     layer = ctx.network.add_shuffle(input_trt)
-    layer.reshape_dims = tuple(input_trt.shape) + (1, 1) 
+    # layer.reshape_dims = tuple(input_trt.shape) + (1, 1) 
+    layer.reshape_dims = (0,)*len(input_trt.shape) + (1, 1) 
 
     bias = trt.Weights(torch_dtype_to_trt(module.weight.dtype))
     if module.bias is not None:
@@ -29,7 +30,8 @@ def convert_Linear(ctx):
     layer = ctx.network.add_shuffle(layer.get_output(0))
     # layer.reshape_dims = tuple(output.shape[1:])
     # layer.reshape_dims = tuple(output.shape)
-    layer.reshape_dims = (-1,) + tuple(output.shape[1:])
+    # layer.reshape_dims = (0,) + tuple(output.shape[1:])
+    layer.reshape_dims = (0,)*len(input_trt.shape)
 
     output._trt = layer.get_output(0)
 
