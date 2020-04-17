@@ -1,5 +1,6 @@
 from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
+import torch
 
 
 @tensorrt_converter('torch.nn.Linear.forward')
@@ -9,28 +10,32 @@ def convert_Linear(ctx):
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
 
-    # reshape to ...xNx1x1
+    ### reshape to ...xNx1x1
     layer = ctx.network.add_shuffle(input_trt)
-    # layer.reshape_dims = tuple(input_trt.shape) + (1, 1) 
     layer.reshape_dims = (0,)*len(input_trt.shape) + (1, 1) 
 
+    ### add fully connected
     bias = trt.Weights(torch_dtype_to_trt(module.weight.dtype))
     if module.bias is not None:
         bias = module.bias.detach().cpu().numpy()
     
-    # add fully connected
-    layer = ctx.network.add_fully_connected(
+    layer = ctx.network.add_convolution(
         input=layer.get_output(0),
-        # input=input_trt,
-        num_outputs=module.out_features,
+        num_output_maps=module.out_features,
+        kernel_shape=(1, 1),
         kernel=module.weight.detach().cpu().numpy(),
         bias=bias)
 
-    # reshape back to N
+    # layer = ctx.network.add_fully_connected(
+    #     input=layer.get_output(0),
+    #     # input=input_trt,
+    #     num_outputs=module.out_features,
+    #     kernel=module.weight.detach().cpu().numpy(),
+    #     bias=bias)
+
+    ### reshape back to N
     layer = ctx.network.add_shuffle(layer.get_output(0))
-    # layer.reshape_dims = tuple(output.shape[1:])
-    # layer.reshape_dims = tuple(output.shape)
-    # layer.reshape_dims = (0,) + tuple(output.shape[1:])
+    # # layer.reshape_dims = tuple(output.shape[1:])
     layer.reshape_dims = (0,)*len(input_trt.shape)
 
     output._trt = layer.get_output(0)
