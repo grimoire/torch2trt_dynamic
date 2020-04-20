@@ -1,6 +1,6 @@
 from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
-from plugins import *
+from torch2trt.plugins import *
 
 
 @tensorrt_converter('mmdet.ops.context_block.ex_view')

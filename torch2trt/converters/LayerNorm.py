@@ -1,6 +1,6 @@
 import tensorrt as trt
 from torch2trt.torch2trt import *
-from plugins import *
+from torch2trt.plugins import *
 
 
 @tensorrt_converter('torch.nn.LayerNorm.forward')

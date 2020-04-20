@@ -57,25 +57,24 @@ from .topk import *
 from .index_select import *
 from .addcmul import *
 
-# try:
-#     import mmdet
-#     # mmdet support
-#     from .DeformConv import *
-#     from .gaembedding import *
-#     from .exview import *
-#     from .carafekernelnormalize import *
-#     from .carafefeaturereassemble import *
-#     from .carafetensoradd import *
-#     from .RoiExtractor import *
-# except:
-#     print("import mmdet plugins failed, please make sure mmdet installed")
+try:
+    import mmdet
+    # mmdet support
+    from .ConvWS2d import *
+    from .DeformConv import *
+    from .gaembedding import *
+    from .exview import *
+    from .carafekernelnormalize import *
+    from .carafefeaturereassemble import *
+    from .carafetensoradd import *
+    from .RoiExtractor import *
+except:
+    print("import mmdet plugins failed, please make sure mmdet installed and plugin exists.")
 
-# # custom plugin support
-# from .GroupNorm import *
-# from .LayerNorm import *
-# from .repeat import *
-
-# try:
-#     from .interpolate import *
-# except:
-#     print("import interpolate failed.")
+try:
+    # custom plugin support
+    from .GroupNorm import *
+    from .LayerNorm import *
+    from .repeat import *
+except:
+    print("plugin not found.")
