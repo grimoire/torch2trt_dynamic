@@ -2,9 +2,24 @@ from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
 from torch2trt.plugins import *
 
+module_path1 = 'mmdet.ops.context_block.ex_view'
+try:
+    from mmdet.ops.context_block import ex_view
+except:
+    print(module_path1, "not found")
 
-@tensorrt_converter('mmdet.ops.context_block.ex_view')
-@tensorrt_converter('mmdet.models.plugins.generalized_attention.ex_view')
+module_path2 = 'mmdet.models.plugins.generalized_attention.ex_view'
+try:
+    from mmdet.models.plugins.generalized_attention import ex_view
+except:
+    module_path2 = "mmdet.ops.generalized_attention.ex_view"
+    try:
+        from mmdet.ops.generalized_attention import ex_view
+    except:
+        print(module_path2, "not found")
+
+@tensorrt_converter(module_path1)
+@tensorrt_converter(module_path2)
 def convert_exview(ctx):
     input = ctx.method_args[0]
     tensors = ctx.method_args[1]

@@ -3,8 +3,17 @@ from torch2trt.torch2trt import *
 from torch2trt.plugins import *
 import mmdet
 
+module_path = 'mmdet.models.plugins.GeneralizedAttention.get_position_embedding'
+try:
+    from mmdet.models.plugins import GeneralizedAttention
+except:
+    module_path = "mmdet.ops.GeneralizedAttention.get_position_embedding"
+    try:
+        from mmdet.ops import GeneralizedAttention
+    except:
+        print(module_path, "not found")
 
-@tensorrt_converter('mmdet.models.plugins.GeneralizedAttention.get_position_embedding')
+@tensorrt_converter(module_path)
 def convert_Repeat(ctx):
     module = ctx.method_args[0]
     input1 = ctx.method_args[1]
