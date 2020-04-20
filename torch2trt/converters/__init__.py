@@ -56,6 +56,7 @@ from .interpolate_custom import *
 from .topk import *
 from .index_select import *
 from .addcmul import *
+from .conv2d import *
 
 try:
     import mmdet
