@@ -57,6 +57,12 @@ from .topk import *
 from .index_select import *
 from .addcmul import *
 from .conv2d import *
+from .view_as import *
+from .unsqueeze import *
+from .squeeze import *
+from .flatten import *
+from .stack import *
+from .pixel_shuffle import *
 
 try:
     import mmdet

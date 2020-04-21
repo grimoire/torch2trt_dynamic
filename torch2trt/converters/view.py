@@ -2,15 +2,8 @@ from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
 
 
-@tensorrt_converter('torch.Tensor.flatten')
-@tensorrt_converter('torch.flatten')
 @tensorrt_converter('torch.Tensor.reshape')
 @tensorrt_converter('torch.Tensor.view')
-@tensorrt_converter('torch.Tensor.view_as')
-@tensorrt_converter('torch.Tensor.unsqueeze')
-@tensorrt_converter('torch.unsqueeze')
-@tensorrt_converter('torch.Tensor.squeeze')
-@tensorrt_converter('torch.squeeze')
 def convert_view(ctx):
     support_dynamic_shape = False
     if hasattr(ctx, "support_dynamic_shape"):
