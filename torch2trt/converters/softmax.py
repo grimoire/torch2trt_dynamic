@@ -14,10 +14,11 @@ def convert_softmax(ctx):
     output = ctx.method_return
 
     # get dims from args or kwargs
-    if 'dim' in ctx.method_kwargs:
-        dim = ctx.method_kwargs['dim']
-    elif len(ctx.method_args) >= 2:
-        dim = ctx.method_args[1]
+    dim = get_arg(ctx, 'dim', pos=1, default=None)
+    if dim is None:
+        dim = -1
+    if dim<0:
+        dim = len(input.shape)+dim
 
     # axes = 1 << (dim - 1)
     if not support_dynamic_shape:

@@ -63,6 +63,7 @@ from .squeeze import *
 from .flatten import *
 from .stack import *
 from .pixel_shuffle import *
+from .LayerNorm import *
 
 try:
     import mmdet
@@ -71,9 +72,7 @@ try:
     from .DeformConv import *
     from .gaembedding import *
     from .exview import *
-    from .carafekernelnormalize import *
-    from .carafefeaturereassemble import *
-    from .carafetensoradd import *
+    from .carafe import *
     from .RoiExtractor import *
 except:
     print("import mmdet plugins failed, please make sure mmdet installed and plugin exists.")
@@ -81,7 +80,6 @@ except:
 try:
     # custom plugin support
     from .GroupNorm import *
-    from .LayerNorm import *
     from .repeat import *
 except:
     print("plugin not found.")
