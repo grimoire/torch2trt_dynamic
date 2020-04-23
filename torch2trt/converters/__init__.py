@@ -64,18 +64,7 @@ from .flatten import *
 from .stack import *
 from .pixel_shuffle import *
 from .LayerNorm import *
-
-try:
-    import mmdet
-    # mmdet support
-    from .ConvWS2d import *
-    from .DeformConv import *
-    from .gaembedding import *
-    from .exview import *
-    from .carafe import *
-    from .RoiExtractor import *
-except:
-    print("import mmdet plugins failed, please make sure mmdet installed and plugin exists.")
+from .exview import *
 
 try:
     # custom plugin support
