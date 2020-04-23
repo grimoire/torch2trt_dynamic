@@ -4,7 +4,7 @@ import tensorrt as trt
 
 
 @tensorrt_converter('torch.matmul')
-def convert_mul(ctx):
+def convert_matmul(ctx):
     input_a = ctx.method_args[0]
     input_b = ctx.method_args[1]
     input_a_trt, input_b_trt = trt_(ctx.network, input_a, input_b)
