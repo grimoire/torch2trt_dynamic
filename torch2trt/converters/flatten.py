@@ -8,8 +8,8 @@ from .identity import *
 def convert_flatten(ctx):
         
     input = ctx.method_args[0]
-    start_dim = get_arg(ctx, 'start_dim', pos=1, default=None)
-    end_dim = get_arg(ctx, 'end_dim', pos=2, default=None)
+    start_dim = get_arg(ctx, 'start_dim', pos=1, default=0)
+    end_dim = get_arg(ctx, 'end_dim', pos=2, default=-1)
 
     if start_dim==-1:
         start_dim = len(input.shape)-1
