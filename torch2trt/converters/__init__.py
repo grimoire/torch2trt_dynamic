@@ -65,6 +65,7 @@ from .stack import *
 from .pixel_shuffle import *
 from .LayerNorm import *
 from .exview import *
+from .size import *
 
 try:
     # custom plugin support

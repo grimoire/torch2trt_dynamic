@@ -4,6 +4,10 @@ from torch2trt.module_test import add_module_test
 
 @tensorrt_converter('torch.nn.Conv1d.forward')
 def convert_Conv1d(ctx):
+    support_dynamic_shape = False
+    if hasattr(ctx, "support_dynamic_shape"):
+        support_dynamic_shape = ctx.support_dynamic_shape
+        
     module = ctx.method_args[0]
     input = ctx.method_args[1]
     input_trt = trt_(ctx.network, input)
@@ -22,7 +26,11 @@ def convert_Conv1d(ctx):
         
     # reshape to 2D
     layer = ctx.network.add_shuffle(input_trt)
-    layer.reshape_dims = (-1, input.shape[-1], 1)
+    if not support_dynamic_shape:
+        layer.reshape_dims = (-1, input.shape[-1], 1)
+    else:
+        layer.reshape_dims = (input.shape[0], -1, input.shape[-1], 1)
+
     
     layer = ctx.network.add_convolution(
         input=layer.get_output(0),
@@ -39,7 +47,10 @@ def convert_Conv1d(ctx):
         
     # reshape back to 1D
     layer = ctx.network.add_shuffle(layer.get_output(0))
-    layer.reshape_dims = (-1, output.shape[-1])
+    if not support_dynamic_shape:
+        layer.reshape_dims = (-1, output.shape[-1])
+    else:
+        layer.reshape_dims = (output.shape[0], -1, output.shape[-1])
 
     output._trt = layer.get_output(0)
 

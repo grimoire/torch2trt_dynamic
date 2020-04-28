@@ -25,7 +25,7 @@ def __convert_min_reduce(ctx):
     input_trt= trt_(ctx.network, input)
     output_val = ctx.method_return
     layer = ctx.network.add_reduce(input_trt,  trt.ReduceOperation.MIN, torch_dim_to_trt_axes(dim), keepdim)
-    output_val._trt = layer.get_output(0)
+    output_val[0]._trt = layer.get_output(0)
     
 
 @tensorrt_converter('torch.min')

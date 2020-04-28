@@ -4,12 +4,19 @@ from torch2trt.module_test import add_module_test
 
 @tensorrt_converter('torch.nn.functional.prelu')
 def convert_prelu(ctx):
+    support_dynamic_shape = False
+    if hasattr(ctx, "support_dynamic_shape"):
+        support_dynamic_shape = ctx.support_dynamic_shape
     input = get_arg(ctx, 'input', pos=0, default=None)
     weight = get_arg(ctx, 'weight', pos=1, default=None)
     output = ctx.method_return
     
-    weight_shape = [1] * (len(input.shape) - 1)
-    weight_shape[0] = weight.numel()
+    if not support_dynamic_shape:
+        weight_shape = [1] * (len(input.shape) - 1)
+        weight_shape[0] = weight.numel()
+    else:
+        weight_shape = [1] * len(input.shape)
+        weight_shape[1] = weight.numel()
     
     input_trt = trt_(ctx.network, input)
     

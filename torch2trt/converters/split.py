@@ -5,6 +5,9 @@ from torch2trt.module_test import add_module_test
 @tensorrt_converter('torch.split')
 @tensorrt_converter('torch.Tensor.split')
 def convert_split(ctx):
+    support_dynamic_shape = False
+    if hasattr(ctx, "support_dynamic_shape"):
+        support_dynamic_shape = ctx.support_dynamic_shape
     input = get_arg(ctx, 'input', 0, None)
     input_trt = trt_(ctx.network, input)
     # we don't need to parse split/chunk (arg 1)
@@ -15,14 +18,24 @@ def convert_split(ctx):
     
     assert(dim >= 1)
     
-    start = [0] * len(input.shape[1:]) # exclude batch
-    stride = [1] * len(start)
-    offset = 0
-    trt_dim = dim - 1
+    if not support_dynamic_shape:
+        start = [0] * len(input.shape[1:]) # exclude batch
+        stride = [1] * len(start)
+        offset = 0
+        trt_dim = dim - 1
+    else:
+        start = [0] * len(input.shape) # exclude batch
+        stride = [1] * len(start)
+        offset = 0
+        trt_dim = dim
+
     
     # add slice layers
     for i, output in enumerate(outputs):
-        shape = list(output.shape[1:]) # exclude batch dim
+        if not support_dynamic_shape:
+            shape = list(output.shape[1:]) # exclude batch dim
+        else:
+            shape = list(output.shape)
         start[trt_dim] = offset
         layer = ctx.network.add_slice(input_trt, start=start, shape=shape, stride=stride)
         output._trt = layer.get_output(0)

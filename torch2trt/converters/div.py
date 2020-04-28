@@ -2,6 +2,7 @@ from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
 
 
+@tensorrt_converter('torch.div')
 @tensorrt_converter('torch.Tensor.div')
 @tensorrt_converter('torch.Tensor.__div__') # py2
 @tensorrt_converter('torch.Tensor.__idiv__') # py2

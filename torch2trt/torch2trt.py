@@ -4,6 +4,7 @@ from copy import copy
 import numpy as np
 import time
 from .calibration import TensorBatchDataset, DatasetCalibrator, DEFAULT_CALIBRATION_ALGORITHM
+from .shape_converter import ShapeConverter
 
 # UTILITY FUNCTIONS
 
@@ -207,6 +208,7 @@ def attach_converter(ctx, method, converter, method_str):
 
 #             print('%s' % (converter.__name__,))
             converter['converter'](ctx)
+            outputs = ctx.method_return
 
             # convert to None so conversion will fail for unsupported layers
             ctx.method_args = None
@@ -418,7 +420,7 @@ def torch2trt(module,
     else:
         network = builder.create_network()
 
-    with ConversionContext(network) as ctx:
+    with ShapeConverter(), ConversionContext(network) as ctx:
 
         if isinstance(inputs, list):
             inputs = tuple(inputs)
