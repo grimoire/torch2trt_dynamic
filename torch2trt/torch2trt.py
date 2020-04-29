@@ -102,6 +102,17 @@ def check_torch_dtype(*tensors):
                 dtype = t.dtype
             else:
                 assert(dtype == t.dtype)  # , 'Tensor data types must match')
+        elif isinstance(t, float):
+            if dtype is None:
+                dtype = torch.float
+            else:
+                assert(dtype == torch.float)
+        elif isinstance(t, int):
+            if dtype is None:
+                dtype = torch.int32
+            else:
+                assert(dtype == torch.int32)
+
     # , 'Data type could not be inferred from any item in list')
     assert(dtype is not None)
     return dtype
@@ -145,7 +156,7 @@ def trt_(network, *tensors):
 
         # or... add constant for scalar primitive
         elif isinstance(t, float) or isinstance(t, int):
-            shape = (1,) * broadcast_num_dim
+            shape = (1,)# * broadcast_num_dim
             scalar = t * torch.ones(shape, dtype=dtype).cpu().numpy()
             trt_tensor = network.add_constant(shape, scalar).get_output(0)
 

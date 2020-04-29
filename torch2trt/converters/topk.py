@@ -1,5 +1,6 @@
 from torch2trt.torch2trt import *
 import tensorrt as trt
+from torch2trt.module_test import add_module_test
 
 
 @tensorrt_converter('torch.topk')
@@ -11,24 +12,12 @@ def convert_topk(ctx):
 
     input = ctx.method_args[0]
 
-    if len(ctx.method_args)>1:
-        k = ctx.method_args[1]
-    else:
-        k = ctx.method_kwargs['k']
-
-    axis = len(input.shape)-1
-    if len(ctx.method_args)>2:
-        axis = ctx.method_args[2]
-    if 'dim' in ctx.method_kwargs:
-        axis = ctx.method_kwargs['dim']
-    
-    topkOp = trt.TopKOperation.MAX
-    if len(ctx.method_args)>3:
-        if ctx.method_args[3]==False:
-            topkOp = trt.TopKOperation.MIN
-    if 'largest' in ctx.method_kwargs:
-        if ctx.method_args[3]==False:
-            topkOp = trt.TopKOperation.MIN
+    k=get_arg(ctx, 'k', pos=1, default = 1)
+    axis = get_arg(ctx, 'dim', pos=2, default = len(input.shape)-1)
+    if axis is None:
+        axis = len(input.shape)-1
+    largest = get_arg(ctx, 'largest', pos=3, default = True)
+    topkOp = trt.TopKOperation.MAX if largest else trt.TopKOperation.MIN
     
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
@@ -61,3 +50,33 @@ def convert_topk(ctx):
         
     output[0]._trt = output0_trt
     output[1]._trt = output1_trt
+
+
+class TopkTestModule(torch.nn.Module):
+    def __init__(self, k, dim, largest):
+        super(TopkTestModule, self).__init__()
+        self.k=k
+        self.dim=dim
+        self.largest = largest
+
+    def forward(self, x):
+        return x.topk(k=self.k, dim=self.dim, largest=self.largest)
+
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 20, 4, 6)], max_workspace_size=1<<20)
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 20, 6)], max_workspace_size=1<<20)
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 20)], max_workspace_size=1<<20)
+def test_topk_dim1():
+    return TopkTestModule(10, 1, True)
+
+    
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 4, 20, 6)], max_workspace_size=1<<20)
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 6, 20)], max_workspace_size=1<<20)
+def test_topk_dim2():
+    return TopkTestModule(10, 2, True)
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 20, 4, 6)], max_workspace_size=1<<20)
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 20, 6)], max_workspace_size=1<<20)
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 20)], max_workspace_size=1<<20)
+def test_topk_largest_false():
+    return TopkTestModule(10, 1, False)
