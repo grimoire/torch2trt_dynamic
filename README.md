@@ -18,9 +18,10 @@ Below are some usage examples, for more check out the [notebooks](notebooks).
 import torch
 from torch import nn
 from torch2trt import torch2trt
+from torchvision.models.resnet import resnet50
 
 # create some regular pytorch model...
-model = nn.Conv2d(3,64, 3).cuda().eval()
+model = resnet50().cuda().eval()
 
 # create example data
 x = torch.ones((1, 3, 224, 224)).cuda()
