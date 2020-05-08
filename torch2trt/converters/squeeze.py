@@ -10,7 +10,7 @@ def convert_squeeze(ctx):
     input = ctx.method_args[0]
     dim = get_arg(ctx, 'dim', pos=1, default=None)
     if dim is None:
-        dim = list(filter(lambda x:x==1 for x in input.shape))
+        dim = list(filter(lambda x:input.shape[x]==1, range(len(input.shape))))
     else:
         if input.shape[dim]!=1:
             ctx.method_args = [input]
