@@ -43,7 +43,11 @@ def convert_flatten(ctx):
     shape_mid_trt = ctx.network.add_slice(shape_trt, slice_mid_start, slice_mid_size, slice_mid_stride).get_output(0)
 
     # reduce mid
-    mid_trt = ctx.network.add_reduce(shape_mid_trt, trt.ReduceOperation.PROD, axes=1, keep_dims=True).get_output(0)
+    mid_trt = ctx.network.add_slice(shape_mid_trt, [0], [1], [1]).get_output(0)
+    for i in range(end_dim-start_dim):
+        other_trt = ctx.network.add_slice(shape_mid_trt, [i+1], [1], [1]).get_output(0)
+        mid_trt = ctx.network.add_elementwise(mid_trt, other_trt, trt.ElementWiseOperation.PROD).get_output(0)
+    # mid_trt = ctx.network.add_reduce(shape_mid_trt, trt.ReduceOperation.PROD, axes=1, keep_dims=True).get_output(0)
     
     shape_mid_trt = mid_trt
 

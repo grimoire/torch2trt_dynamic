@@ -14,14 +14,21 @@ def convert_AdaptiveAvgPool2d(ctx):
     if not isinstance(output_size, tuple):
         output_size = (output_size, ) * 2
 
-    stride = (input_trt.shape[-2] // output_size[-2], input_trt.shape[-1] // output_size[-1])
+    if output_size[0]==1 and output_size[1] == 1:
+        shape_length = len(input.shape)
+        axes = (1<<(shape_length-1)) + (1<<(shape_length-2))
+        keepdim = True
+        layer = ctx.network.add_reduce(input_trt, trt.ReduceOperation.AVG, axes, keepdim)
+        output._trt = layer.get_output(0)
+    else:
+        stride = (input_trt.shape[-2] // output_size[-2], input_trt.shape[-1] // output_size[-1])
 
-    kernel_size = stride
-    layer = ctx.network.add_pooling(
-        input=input_trt, type=trt.PoolingType.AVERAGE, window_size=kernel_size)
-    layer.stride = stride
+        kernel_size = stride
+        layer = ctx.network.add_pooling(
+            input=input_trt, type=trt.PoolingType.AVERAGE, window_size=kernel_size)
+        layer.stride = stride
 
-    output._trt = layer.get_output(0)
+        output._trt = layer.get_output(0)
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
