@@ -2,7 +2,7 @@
 
 This is a branch of https://github.com/NVIDIA-AI-IOT/torch2trt with dynamic input support
 
-Not all layer support dynamic input such as view, squeeze, stack, etc... 
+Not all layer support dynamic input such as view, reshape, AdaptivePooling(kernel_size>1) etc... 
 
 You can create a custom layer from nvinfer1::IPluginV2DynamicExt to implement it.
 
