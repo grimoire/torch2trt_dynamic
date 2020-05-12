@@ -18,28 +18,32 @@ def convert_BatchNorm1d(ctx):
     power = np.ones_like(scale)
     
     # reshape to 2D
-    layer = ctx.network.add_shuffle(input_trt)
-    
     if not support_dynamic_shape:
+        layer = ctx.network.add_shuffle(input_trt)
         if len(input.shape) == 2:
             layer.reshape_dims = (input.shape[1], 1, 1)
         else:
             layer.reshape_dims = (input.shape[1], input.shape[2], 1)
     else:
-        if len(input.shape) == 2:
-            layer.reshape_dims = (input.shape[0], input.shape[1], 1, 1)
+        input_shape_trt = ctx.network.add_shape(input_trt).get_output(0)
+        one_trt = trt_(ctx.network, torch.tensor([1],dtype=torch.int32).to(input.device))
+        if len(input.shape)==2:
+            new_input_shape_trt = ctx.network.add_concatenation([input_shape_trt, one_trt, one_trt]).get_output(0)
         else:
-            layer.reshape_dims = (input.shape[0], input.shape[1], input.shape[2], 1)
+            new_input_shape_trt = ctx.network.add_concatenation([input_shape_trt, one_trt]).get_output(0)
+        layer = ctx.network.add_shuffle(input_trt)
+        layer.set_input(1, new_input_shape_trt)
 
-    
     layer = ctx.network.add_scale(layer.get_output(0), trt.ScaleMode.CHANNEL, bias, scale, power)
 
     # reshape back to 1D
-    layer = ctx.network.add_shuffle(layer.get_output(0))
+    conv_out_trt = layer.get_output(0)
     if not support_dynamic_shape:
+        layer = ctx.network.add_shuffle(conv_out_trt)
         layer.reshape_dims = tuple(output.shape[1:])
     else:
-        layer.reshape_dims = tuple(output.shape)
+        layer = ctx.network.add_shuffle(conv_out_trt)
+        layer.set_input(1, input_shape_trt)
     
     output._trt = layer.get_output(0)
 
