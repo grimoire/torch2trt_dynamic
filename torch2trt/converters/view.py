@@ -18,17 +18,17 @@ def convert_view(ctx):
     output = ctx.method_return
 
     ## check if there are shape tensor
-    is_shape_tensor = True
+    is_shape_tensor = False
     for s in size:
         if isinstance(s, IntWarper):
             is_shape_tensor = True
             break
 
     ## negative shape might cause overflow, forbid for now
-    # for s in size:
-    #     if s<0:
-    #         is_shape_tensor=False
-    #         break
+    for s in size:
+        if s<0:
+            is_shape_tensor=True
+            break
 
     ## compute shape tensor
     if support_dynamic_shape and is_shape_tensor:
