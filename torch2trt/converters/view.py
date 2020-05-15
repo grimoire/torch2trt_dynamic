@@ -18,7 +18,7 @@ def convert_view(ctx):
     output = ctx.method_return
 
     ## check if there are shape tensor
-    is_shape_tensor = False
+    is_shape_tensor = True
     for s in size:
         if isinstance(s, IntWarper):
             is_shape_tensor = True
