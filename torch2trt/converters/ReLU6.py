@@ -7,7 +7,7 @@ def convert_ReLU6(ctx):
     input = ctx.method_args[1]
     output = ctx.method_return
     
-    input_trt, trt_6 = trt_(ctx.network, input, 6)
+    input_trt, trt_6 = trt_(ctx.network, input, 6.)
 
     layer = ctx.network.add_activation(
         input=input_trt, type=trt.ActivationType.RELU)

@@ -102,16 +102,18 @@ def check_torch_dtype(*tensors):
                 dtype = t.dtype
             else:
                 assert(dtype == t.dtype)  # , 'Tensor data types must match')
-        elif isinstance(t, float):
+
+    for t in tensors:
+        if isinstance(t, float):
             if dtype is None:
                 dtype = torch.float
-            else:
-                assert(dtype == torch.float)
+            # else:
+            #     assert(dtype == torch.float)
         elif isinstance(t, int):
             if dtype is None:
                 dtype = torch.int32
-            else:
-                assert(dtype == torch.int32)
+            # else:
+            #     assert(dtype == torch.int32)
 
     # , 'Data type could not be inferred from any item in list')
     assert(dtype is not None)
