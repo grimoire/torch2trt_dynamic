@@ -6,7 +6,98 @@ from .split import convert_split
 @tensorrt_converter('torch.chunk')
 @tensorrt_converter('torch.Tensor.chunk')
 def convert_chunk(ctx):
-    convert_split(ctx)
+    support_dynamic_shape = False
+    if hasattr(ctx, "support_dynamic_shape"):
+        support_dynamic_shape = ctx.support_dynamic_shape
+
+    if not support_dynamic_shape:
+        convert_split(ctx)
+        return
+
+    # https://github.com/pytorch/pytorch/blob/b90fc52c687a6851047f18ec9d06fb998efe99dd/aten/src/ATen/native/TensorShape.cpp
+
+    input = get_arg(ctx, 'input', 0, None)
+    input_trt = trt_(ctx.network, input)
+    chunks = get_arg(ctx, 'chunks', 1, 0)
+    dim = get_arg(ctx, 'dim', 2, 0)
+    outputs = ctx.method_return
+
+    if len(outputs)!=chunks:
+        convert_split(ctx)
+        return
+
+    input_shape_trt = tensor_trt_get_shape_trt(ctx.network, input_trt)
+    head_shape_trt = slice_shape_trt(ctx.network, input_shape_trt, 0, dim)
+    chunk_shape_trt = slice_shape_trt(ctx.network, input_shape_trt, dim, 1, 1)
+    tail_shape_trt = slice_shape_trt(ctx.network, input_shape_trt, dim+1)
+
+    chunk_trt = trt_(ctx.network, int(chunks))
+    one_trt = trt_(ctx.network, 1)
+    zero_trt = trt_(ctx.network, 0)
+
+    # chunk 0~n-2
+    chunk_size_trt = ctx.network.add_elementwise(chunk_shape_trt, chunk_trt, trt.ElementWiseOperation.SUM).get_output(0)
+    chunk_size_trt = ctx.network.add_elementwise(chunk_size_trt, one_trt, trt.ElementWiseOperation.SUB).get_output(0)
+    chunk_size_trt = ctx.network.add_elementwise(chunk_size_trt, chunk_trt, trt.ElementWiseOperation.FLOOR_DIV).get_output(0)
+    
+    # chunk n-1
+    chunk_last_trt = ctx.network.add_elementwise(chunk_trt, one_trt, trt.ElementWiseOperation.SUB).get_output(0)
+    chunk_last_trt = ctx.network.add_elementwise(chunk_size_trt, chunk_last_trt, trt.ElementWiseOperation.PROD).get_output(0)
+    chunk_last_trt = ctx.network.add_elementwise(chunk_shape_trt, chunk_last_trt, trt.ElementWiseOperation.SUB).get_output(0)
+
+    stride_trt = ctx.network.add_concatenation([one_trt]*len(input.shape)).get_output(0)
+    if head_shape_trt is not None:
+        head_start_trt = ctx.network.add_concatenation([zero_trt]*dim).get_output(0)
+
+    if tail_shape_trt is not None:
+        tail_start_trt = ctx.network.add_concatenation([zero_trt]*dim).get_output(0)
+
+    start_trt = []
+    size_trt = []
+    chunk_start_trt = zero_trt
+    if head_shape_trt is not None:
+        start_trt.append(head_start_trt)
+        size_trt.append(head_shape_trt)
+    start_trt.append(chunk_start_trt)
+    size_trt.append(chunk_size_trt)
+    if tail_shape_trt is not None:
+        start_trt.append(tail_start_trt)
+        size_trt.append(tail_shape_trt)
+    start_trt = ctx.network.add_concatenation(start_trt).get_output(0)
+    size_trt = ctx.network.add_concatenation(size_trt).get_output(0)
+    
+    input_dim = len(input.shape)
+    for i in range(chunks-1):
+        layer = ctx.network.add_slice(input_trt, [0]*input_dim, [1]*input_dim, [1]*input_dim)
+        layer.set_input(1, start_trt)
+        layer.set_input(2, size_trt)
+        layer.set_input(3, stride_trt)
+        outputs[i]._trt = layer.get_output(0)
+        
+        start_trt = []
+        chunk_start_trt = ctx.network.add_elementwise(chunk_start_trt, chunk_size_trt, trt.ElementWiseOperation.SUM).get_output(0)
+        if head_shape_trt is not None:
+            start_trt.append(head_start_trt)
+        start_trt.append(chunk_start_trt)
+        if tail_shape_trt is not None:
+            start_trt.append(tail_start_trt)
+        start_trt = ctx.network.add_concatenation(start_trt).get_output(0)
+
+    
+    size_trt = []
+    if head_shape_trt is not None:
+        size_trt.append(head_shape_trt)
+    size_trt.append(chunk_last_trt)
+    if tail_shape_trt is not None:
+        size_trt.append(tail_shape_trt)
+    size_trt = ctx.network.add_concatenation(size_trt).get_output(0)
+
+    layer = ctx.network.add_slice(input_trt, [0]*input_dim, [1]*input_dim, [1]*input_dim)
+    layer.set_input(1, start_trt)
+    layer.set_input(2, size_trt)
+    layer.set_input(3, stride_trt)
+    outputs[chunks-1]._trt = layer.get_output(0)
+
 
         
 class TorchChunk(torch.nn.Module):

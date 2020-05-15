@@ -182,6 +182,28 @@ def trt_(network, *tensors):
         return tuple(trt_tensors)
 
 
+def slice_shape_trt(network, shape_trt, start=0, size=None, stride=1):
+    shape_trt_dim = shape_trt.shape[0]
+    if start==0 and stride==1 and (size is None or size==shape_trt_dim):
+        return shape_trt
+
+    if start >= shape_trt_dim:
+        return None
+    
+    if size == 0:
+        return None
+
+    if size is None:
+        size = shape_trt_dim - start
+    
+    return network.add_slice(shape_trt, [start], [size], [stride]).get_output(0)
+
+
+def tensor_trt_get_shape_trt(network, tensor_trt, start=0, size=None, stride=1):
+    shape_trt = network.add_shape(tensor_trt).get_output(0)
+    return slice_shape_trt(network, shape_trt, start, size, stride)
+
+
 # CONVERSION REGISTRY AND HOOKS
 
 
