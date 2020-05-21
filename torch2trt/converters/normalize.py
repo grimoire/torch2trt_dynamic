@@ -9,6 +9,8 @@ def convert_normalize(ctx):
     p = get_arg(ctx, 'p', pos=1, default=2)
     dim = get_arg(ctx, 'dim', pos=2, default=1)
     eps = get_arg(ctx, 'eps', pos=3, default=1e-12)
+    if dim<0:
+        dim = len(input.shape)+dim
     
 #     input_trt = input._trt
     output = ctx.method_return
