@@ -1,5 +1,5 @@
-import torch
 import tensorrt as trt
+import torch
 from copy import copy
 import numpy as np
 import time

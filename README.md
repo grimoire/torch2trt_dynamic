@@ -15,9 +15,10 @@ Below are some usage examples, for more check out the [notebooks](notebooks).
 ### Convert
 
 ```python
+# torch2trt should be imported before torch
+from torch2trt import torch2trt
 import torch
 from torch import nn
-from torch2trt import torch2trt
 from torchvision.models.resnet import resnet50
 
 # create some regular pytorch model...
