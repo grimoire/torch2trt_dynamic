@@ -76,7 +76,7 @@ model_trt.load_state_dict(torch.load('alexnet_trt.pth'))
 To install without compiling plugins, call the following
 
 ```bash
-git clone https://github.com/grimoire/torch2trt_dynamic.git
+git clone https://github.com/grimoire/torch2trt_dynamic.git torch2trt
 cd torch2trt
 sudo python setup.py install
 ```
