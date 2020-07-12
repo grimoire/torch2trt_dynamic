@@ -66,6 +66,7 @@ from .pixel_shuffle import *
 from .LayerNorm import *
 from .exview import *
 from .size import *
+from .gather import *
 
 try:
     # custom plugin support
