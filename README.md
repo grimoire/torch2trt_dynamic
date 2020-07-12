@@ -81,6 +81,14 @@ cd torch2trt
 sudo python setup.py install
 ```
 
+### Set plugins(optional)
+
+Some layer such as GN and repeat need c++ plugins. To enable these layers. Install the plugin project below
+
+https://github.com/grimoire/amirstan_plugin
+
+remember to export the enviroment variable AMIRSTAN_LIBRARY_PATH
+
 ## How to add (or override) a converter
 
 Here we show how to add a converter for the ``ReLU`` module using the TensorRT
