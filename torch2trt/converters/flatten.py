@@ -51,7 +51,9 @@ def convert_flatten(ctx):
     
     shape_mid_trt = mid_trt
 
-    if shape1_trt == None:
+    if shape1_trt is None and shape2_trt is None:
+        new_shape_trt = shape_mid_trt
+    elif shape1_trt == None:
         new_shape_trt = ctx.network.add_concatenation([shape_mid_trt, shape2_trt]).get_output(0)
     elif shape2_trt == None:
         new_shape_trt = ctx.network.add_concatenation([shape1_trt, shape_mid_trt]).get_output(0)

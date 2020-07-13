@@ -1,6 +1,9 @@
 from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
 from .unary import UnaryModule
+from .flatten import *
+from .topk import *
+from .squeeze import *
 
 
 def __convert_max_elementwise(ctx):
@@ -13,19 +16,90 @@ def __convert_max_elementwise(ctx):
     
 
 def __convert_max_reduce(ctx):
-    support_dynamic_shape = False
-    if hasattr(ctx, "support_dynamic_shape"):
-        support_dynamic_shape = ctx.support_dynamic_shape
+
+    if isinstance(ctx.method_return, torch.Tensor):
+        support_dynamic_shape = False
+        if hasattr(ctx, "support_dynamic_shape"):
+            support_dynamic_shape = ctx.support_dynamic_shape
+        input = ctx.method_args[0]
+        if support_dynamic_shape:
+            dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(0, input.ndim)))
+        else:
+            dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(1,input.ndim)))
+        keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
+        input_trt= trt_(ctx.network, input)
+        output_val = ctx.method_return
+        layer = ctx.network.add_reduce(input_trt,  trt.ReduceOperation.MAX, torch_dim_to_trt_axes(dim), keepdim)
+        output_val._trt = layer.get_output(0)
+        return
+
+    old_args = ctx.method_args
+    old_kwargs = ctx.method_kwargs
     input = ctx.method_args[0]
-    if support_dynamic_shape:
-        dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(0, input.ndim)))
-    else:
-        dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(1, input.ndim)))
+    output = ctx.method_return
+
+    dim = get_arg(ctx, 'dim', pos=1, default=None)
     keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
-    input_trt= trt_(ctx.network, input)
-    output_val = ctx.method_return
-    layer = ctx.network.add_reduce(input_trt,  trt.ReduceOperation.MAX, torch_dim_to_trt_axes(dim), keepdim)
-    output_val[0]._trt = layer.get_output(0)
+
+    return_single = False
+
+    # dim is None
+    if dim is None:
+        return_single = True
+        input_flatten = input.flatten()
+        ctx.method_args = [input]
+        ctx.method_return = input_flatten
+        convert_flatten(ctx)
+        input = ctx.method_return
+        dim = 0
+    
+    # topk
+    topk_output = input.topk(1, dim)
+    topk_input = [input, 1, dim]
+    ctx.method_args = topk_input
+    ctx.method_kwargs = {}
+    ctx.method_return = topk_output
+    convert_topk(ctx)
+    topk_value = ctx.method_return[0]
+    topk_index = ctx.method_return[1]
+
+
+    # keepdim
+    if not keepdim and topk_index.shape[dim]==1 and len(topk_index.shape)>1:
+
+        topk_index_squeeze = topk_index.squeeze(dim)
+        ctx.method_args = [topk_index, dim]
+        ctx.method_return = topk_index_squeeze
+        convert_squeeze(ctx)
+
+        topk_value_squeeze = topk_value.squeeze(dim)
+        ctx.method_args = [topk_value, dim]
+        ctx.method_return = topk_value_squeeze
+        convert_squeeze(ctx)
+
+        topk_index = topk_index_squeeze
+        topk_value = topk_value_squeeze
+
+    if return_single:
+        output._trt = topk_value._trt
+    else:
+        output[0]._trt = topk_value._trt
+        output[1]._trt = topk_index._trt
+
+    ctx.method_return = output
+
+    ctx.method_args = old_args
+    ctx.method_kwargs = old_kwargs
+
+    # if support_dynamic_shape:
+    #     dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(0, input.ndim)))
+    # else:
+    #     dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(1, input.ndim)))
+    # keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
+    # input_trt= trt_(ctx.network, input)
+    # output_val = ctx.method_return
+    # layer = ctx.network.add_reduce(input_trt,  trt.ReduceOperation.MAX, torch_dim_to_trt_axes(dim), keepdim)
+    # output_val[0]._trt = layer.get_output(0)
     
 
 @tensorrt_converter('torch.max')

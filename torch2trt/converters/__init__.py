@@ -67,6 +67,8 @@ from .LayerNorm import *
 from .exview import *
 from .size import *
 from .gather import *
+from .argmax import *
+from .argmin import *
 
 try:
     # custom plugin support
