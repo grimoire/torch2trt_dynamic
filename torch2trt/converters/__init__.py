@@ -69,6 +69,7 @@ from .size import *
 from .gather import *
 from .argmax import *
 from .argmin import *
+from .expand import *
 
 try:
     # custom plugin support

@@ -6,7 +6,7 @@ from torch2trt.plugins import *
 def convert_repeat(ctx):
     input = ctx.method_args[0]
     shape = ctx.method_args[1]
-    if not isinstance(shape, torch.Size):
+    if isinstance(shape, int):
         shape = ctx.method_args[1:]
 
     input_trt = trt_(ctx.network, input)
