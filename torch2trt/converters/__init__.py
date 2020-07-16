@@ -66,7 +66,6 @@ from .pixel_shuffle import *
 from .LayerNorm import *
 from .exview import *
 from .size import *
-from .gather import *
 from .argmax import *
 from .argmin import *
 from .expand import *
@@ -75,5 +74,6 @@ try:
     # custom plugin support
     from .GroupNorm import *
     from .repeat import *
+    from .gather import *
 except:
     print("plugin not found.")
