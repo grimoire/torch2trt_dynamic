@@ -50,6 +50,35 @@ def test_log():
     return UnaryModule(lambda x: torch.log(x))
 
 
+#  LOG : Log (base 2)
+
+from .div import convert_div
+
+@tensorrt_converter('torch.log2')
+@tensorrt_converter('torch.log2_')
+@tensorrt_converter('torch.Tensor.log2')
+@tensorrt_converter('torch.Tensor.log2_')
+def convert_log2(ctx):
+    old_args = ctx.method_args
+    old_kwargs = ctx.method_kwargs
+    input = get_arg(ctx, 'input', pos=0, default=None)
+    output = ctx.method_return
+
+    input_log = input.log()
+    ctx.method_return = input_log
+    __convert_unary(ctx, trt.UnaryOperation.LOG)
+
+    ctx.method_args = [input_log, input.new_tensor(2.).log()]
+    ctx.method_return = output
+    convert_div(ctx)
+    ctx.method_args = old_args
+    ctx.method_kwargs = old_kwargs
+
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
+def test_log2():
+    return UnaryModule(lambda x: torch.log2(x))
+
 # SQRT : Square root
 
 
