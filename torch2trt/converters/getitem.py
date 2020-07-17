@@ -8,7 +8,7 @@ def slice_to_trt(dim_size, dim_slice):
     start = 0 if dim_slice.start is None else dim_slice.start
     stop = dim_size if dim_slice.stop is None else dim_slice.stop
     stride = 1 if dim_slice.step is None else dim_slice.step
-    
+
     size = (stop - start - 1) // stride + 1
     
     return start, size, stride
@@ -70,9 +70,14 @@ def convert_tensor_getitem(ctx):
     starts = []
     sizes = []
     strides = []
+    starts_shape_trt = []
+    sizes_shape_trt = []
+    strides_shape_trt = []
     
     input_dim = 0
-    for s in new_slices:
+    need_dynamic_input = False
+    for index, s in enumerate(new_slices):
+        dim_shape_trt = tensor_trt_get_shape_trt(ctx.network, input_trt, index, 1, 1)
         
         if input_dim >= len(input_trt.shape):
             break
@@ -83,15 +88,45 @@ def convert_tensor_getitem(ctx):
             starts.append(start)
             sizes.append(size)
             strides.append(stride)
+            if start<0:
+                start_trt = ctx.network.add_elementwise(dim_shape_trt, trt_(ctx.network, start), trt.ElementWiseOperation.SUM).get_output(0)
+                need_dynamic_input = True
+            else:
+                start_trt = trt_(ctx.network, start)
+            starts_shape_trt.append(start_trt)
+            if size<0:
+                need_dynamic_input = True
+                size_trt = ctx.network.add_elementwise(dim_shape_trt, trt_(ctx.network, size), trt.ElementWiseOperation.SUM).get_output(0)
+            else:
+                size_trt = trt_(ctx.network, size)
+            sizes_shape_trt.append(size_trt)
+            strides_shape_trt.append(trt_(ctx.network, stride))
             input_dim += 1
             
         elif isinstance(s, int):
             starts.append(s)
             sizes.append(1)
             strides.append(1)
+            if s<0:
+                need_dynamic_input = True
+                start_trt = ctx.network.add_elementwise(dim_shape_trt, trt_(ctx.network, s), trt.ElementWiseOperation.SUM).get_output(0)
+            else:
+                start_trt = trt_(ctx.network, start)
+            sizes_shape_trt.append(trt_(ctx.network, 1))
+            strides_shape_trt.append(trt_(ctx.network, 1))
             input_dim += 1
     
-    output_trt = ctx.network.add_slice(input_trt, starts, sizes, strides).get_output(0)
+    if not need_dynamic_input:
+        output_trt = ctx.network.add_slice(input_trt, starts, sizes, strides).get_output(0)
+    else:
+        starts_shape_trt = ctx.network.add_concatenation(starts_shape_trt).get_output(0)
+        sizes_shape_trt = ctx.network.add_concatenation(sizes_shape_trt).get_output(0)
+        strides_shape_trt = ctx.network.add_concatenation(strides_shape_trt).get_output(0)
+        slice_layer = ctx.network.add_slice(input_trt, starts, sizes, strides)
+        slice_layer.set_input(1, starts_shape_trt)
+        slice_layer.set_input(2, sizes_shape_trt)
+        slice_layer.set_input(3, strides_shape_trt)
+        output_trt = slice_layer.get_output(0)
 
     # Step 3.5 - Add gather layer if necessary
     gather_index = [e for e, s in enumerate(slices) if isinstance(s, torch.Tensor) and (s.dtype==torch.int32 or s.dtype==torch.long)]

@@ -3,6 +3,7 @@ from torch2trt.module_test import add_module_test
 
 
 @tensorrt_converter('torch.pow')
+@tensorrt_converter('torch.Tensor.pow')
 @tensorrt_converter('torch.Tensor.__ipow__')
 @tensorrt_converter('torch.Tensor.__pow__')
 def convert_pow(ctx):
