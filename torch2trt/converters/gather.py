@@ -2,6 +2,7 @@ from torch2trt.torch2trt import *
 from torch2trt.plugins import *
 
 
+@tensorrt_converter('torch.Tensor.gather')
 @tensorrt_converter('torch.gather')
 def convert_gather(ctx):
     inputs = ctx.method_args[0]
