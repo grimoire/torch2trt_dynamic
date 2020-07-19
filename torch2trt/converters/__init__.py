@@ -5,9 +5,6 @@ from .dummy_converters import *
 # supported converters will override dummy converters
 
 from .activation import *
-from .adaptive_avg_pool2d import *
-from .adaptive_max_pool2d import *
-from .AdaptiveAvgPool2d import *
 from .add import *
 from .avg_pool2d import *
 from .mul import *
@@ -75,5 +72,9 @@ try:
     from .GroupNorm import *
     from .repeat import *
     from .gather import *
+    from .adaptive_avg_pool2d import *
+    from .adaptive_max_pool2d import *
+    from .AdaptiveAvgPool2d import *
+    from .AdaptiveMaxPool2d import *
 except:
     print("plugin not found.")
