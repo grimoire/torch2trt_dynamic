@@ -35,7 +35,7 @@ opt_shape_param = [
         [1, 3, 512, 512]    # max
     ]
 ]
-model_trt = torch2trt(model, [x], opt_shape_param=opt_shape_param)
+model_trt = torch2trt(model, [x], fp16_mode=False, opt_shape_param=opt_shape_param)
 ```
 
 ### Execute
@@ -44,8 +44,9 @@ We can execute the returned ``TRTModule`` just like the original PyTorch model
 
 ```python
 x = torch.rand(1,3,256,256).cuda()
-y = model(x)
-y_trt = model_trt(x)
+with torch.no_grad():
+    y = model(x)
+    y_trt = model_trt(x)
 
 # check the output against PyTorch
 print(torch.max(torch.abs(y - y_trt)))

@@ -66,6 +66,7 @@ from .size import *
 from .argmax import *
 from .argmin import *
 from .expand import *
+from .cast_type import *
 
 try:
     # custom plugin support
