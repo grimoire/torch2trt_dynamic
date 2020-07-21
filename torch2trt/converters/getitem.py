@@ -1,6 +1,7 @@
 from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
 import torch
+from .size import get_intwarper_trt
 
 
 def slice_to_trt(dim_size, dim_slice):
@@ -41,7 +42,9 @@ def convert_tensor_getitem(ctx):
     
     new_slices = []
 
-    for s in slices:
+    erase_dims = []
+    add_dims = []
+    for index, s in enumerate(slices):
         
         if s is Ellipsis:
             while num_ellipsis > 0:
@@ -50,8 +53,10 @@ def convert_tensor_getitem(ctx):
         elif isinstance(s, slice):
             new_slices.append(s)
         elif s is None:
-            new_slices.append(None)
+            add_dims.append(index)
+            # new_slices.append(None)
         elif isinstance(s, int):
+            erase_dims.append(index)
             new_slices.append(s)
         elif isinstance(s, torch.Tensor):
             new_slices.append(slice(None, None, None))
@@ -76,6 +81,7 @@ def convert_tensor_getitem(ctx):
     
     input_dim = 0
     need_dynamic_input = False
+    one_trt = trt_(ctx.network, input.new_ones(1).int())
     for index, s in enumerate(new_slices):
         dim_shape_trt = tensor_trt_get_shape_trt(ctx.network, input_trt, index, 1, 1)
         
@@ -94,13 +100,25 @@ def convert_tensor_getitem(ctx):
             else:
                 start_trt = trt_(ctx.network, start)
             starts_shape_trt.append(start_trt)
+            stride_trt = trt_(ctx.network, stride)
+            strides_shape_trt.append(stride_trt)
             if size<0:
                 need_dynamic_input = True
                 size_trt = ctx.network.add_elementwise(dim_shape_trt, trt_(ctx.network, size), trt.ElementWiseOperation.SUM).get_output(0)
+                size_trt = ctx.network.add_elementwise(size_trt, start_trt, trt.ElementWiseOperation.SUB).get_output(0)
+                size_trt = ctx.network.add_elementwise(size_trt, one_trt, trt.ElementWiseOperation.SUB).get_output(0)
+                size_trt = ctx.network.add_elementwise(size_trt, stride_trt, trt.ElementWiseOperation.DIV).get_output(0)
+                size_trt = ctx.network.add_elementwise(size_trt, one_trt, trt.ElementWiseOperation.SUM).get_output(0)
+            elif s.stop is None:
+                need_dynamic_input = True
+                size_trt = dim_shape_trt
+                size_trt = ctx.network.add_elementwise(size_trt, start_trt, trt.ElementWiseOperation.SUB).get_output(0)
+                size_trt = ctx.network.add_elementwise(size_trt, one_trt, trt.ElementWiseOperation.SUB).get_output(0)
+                size_trt = ctx.network.add_elementwise(size_trt, stride_trt, trt.ElementWiseOperation.DIV).get_output(0)
+                size_trt = ctx.network.add_elementwise(size_trt, one_trt, trt.ElementWiseOperation.SUM).get_output(0)
             else:
                 size_trt = trt_(ctx.network, size)
             sizes_shape_trt.append(size_trt)
-            strides_shape_trt.append(trt_(ctx.network, stride))
             input_dim += 1
             
         elif isinstance(s, int):
@@ -111,7 +129,8 @@ def convert_tensor_getitem(ctx):
                 need_dynamic_input = True
                 start_trt = ctx.network.add_elementwise(dim_shape_trt, trt_(ctx.network, s), trt.ElementWiseOperation.SUM).get_output(0)
             else:
-                start_trt = trt_(ctx.network, s)
+                start_trt = get_intwarper_trt(s, ctx)
+            starts_shape_trt.append(start_trt)
             sizes_shape_trt.append(trt_(ctx.network, 1))
             strides_shape_trt.append(trt_(ctx.network, 1))
             input_dim += 1
@@ -137,11 +156,23 @@ def convert_tensor_getitem(ctx):
     
     # Step 4 - Add shuffle layer to insert dimensions for 'None' slices and remove dimensions for 'int' slices
     
-    num_non_slice = len([s for s in slices if not isinstance(s, slice)])
-    if num_non_slice > 0:
+    # num_non_slice = len([s for s in new_slices if not isinstance(s, slice)])
+    
+    if len(erase_dims) + len(add_dims)>0:
         layer = ctx.network.add_shuffle(output_trt)
         if support_dynamic_shape:
-            layer.reshape_dims = tuple(output.shape) # exclude batch
+            ## full output shape
+            out_shape_trt = [tensor_trt_get_shape_trt(ctx.network, output_trt, i, 1) for i in range(len(input.shape))]
+            ## if slice is None
+            for add in add_dims[::-1]:
+                out_shape_trt = out_shape_trt[:add] + [one_trt] + out_shape_trt[add:]
+            ## if slice is Int
+            for e in erase_dims:
+                out_shape_trt[e] = None
+            out_shape_trt = list(filter(lambda x: x is not None, out_shape_trt))
+            out_shape_trt = ctx.network.add_concatenation(out_shape_trt).get_output(0)
+            layer.set_input(1, out_shape_trt)
+            # layer.reshape_dims = tuple(output.shape) # exclude batch
         else:
             # reshape_dims = [output_trt.shape[e] for e, s in enumerate(slices) if isinstance(s,slice)]
             # layer.reshape_dims = tuple(reshape_dims)

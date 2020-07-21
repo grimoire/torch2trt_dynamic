@@ -18,7 +18,7 @@ def convert_adaptive_max_pool2d(ctx):
     plugin = create_adaptivepool_plugin("adaptive_max_pool2d_"+str(id(input)),
                                         output_size=output_size,
                                         pooling_type=trt.PoolingType.MAX)
-            
+
     layer = ctx.network.add_plugin_v2(
         inputs=[input_trt], plugin=plugin)
 
