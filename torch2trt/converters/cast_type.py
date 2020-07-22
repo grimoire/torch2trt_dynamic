@@ -17,9 +17,11 @@ def convert_type(ctx, data_type):
 @tensorrt_converter('torch.Tensor.int')
 def convert_int(ctx):
     convert_type(ctx, trt.DataType.INT32)
+    convert_type(ctx, trt.DataType.INT32)
 
 @tensorrt_converter('torch.Tensor.float')
 def convert_float(ctx):
+    convert_type(ctx, trt.DataType.FLOAT)
     convert_type(ctx, trt.DataType.FLOAT)
 
 # @tensorrt_converter('torch.Tensor.char')

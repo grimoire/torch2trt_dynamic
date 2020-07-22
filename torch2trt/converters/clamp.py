@@ -1,14 +1,30 @@
 from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
+from .size import IntWarper
 
 
 def __add_clamp(network, trt_input, val, op):
     
     # create TensorRT constant for minimum value
     val_shape = (1, ) * len(trt_input.shape)  # broadcast all dimensions
-    val_tensor = val * torch.ones(val_shape, dtype=torch_dtype_from_trt(trt_input.dtype)).cpu().numpy()
-    val_trt = network.add_constant(val_shape, val_tensor)
-    layer = network.add_elementwise(trt_input, val_trt.get_output(0), op)
+    if isinstance(val, IntWarper):
+        val_trt = val._trt
+
+        # convert type
+        layer = network.add_identity(val_trt)
+        layer.set_output_type(0, trt_input.dtype)
+        val_trt = layer.get_output(0)
+
+        # reshape
+        layer = network.add_shuffle(val_trt)
+        layer.reshape_dims = val_shape
+        val_trt = layer.get_output(0)
+    else:
+        # val_shape = (1, ) * len(trt_input.shape)  # broadcast all dimensions
+        val_tensor = val * torch.ones(val_shape, dtype=torch_dtype_from_trt(trt_input.dtype)).cpu().numpy()
+        layer = network.add_constant(val_shape, val_tensor)
+        val_trt = layer.get_output(0)
+    layer = network.add_elementwise(trt_input, val_trt, op)
     
     return layer
 

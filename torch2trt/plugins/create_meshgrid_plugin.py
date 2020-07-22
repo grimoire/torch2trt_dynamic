@@ -12,8 +12,8 @@ ctypes.CDLL(osp.join(dir_path, "libamirstan_plugin.so"))
 def create_meshgrid_plugin(layer_name,
                                 num_inputs,
                                 slice_dims = [2, 3],
-                                starts = [0, 0],
-                                strides = [1, 1]):
+                                starts = [0., 0.],
+                                strides = [1., 1.]):
 
     creator = trt.get_plugin_registry().get_plugin_creator(
         'MeshGridPluginDynamic', '1', '')
@@ -29,11 +29,11 @@ def create_meshgrid_plugin(layer_name,
     pfc.append(pf_slice_dims)
 
     pf_starts = trt.PluginField("starts", np.array(
-        starts, dtype=np.int32), trt.PluginFieldType.INT32)
+        starts, dtype=np.float32), trt.PluginFieldType.FLOAT32)
     pfc.append(pf_starts)
 
     pf_strides = trt.PluginField("strides", np.array(
-        strides, dtype=np.int32), trt.PluginFieldType.INT32)
+        strides, dtype=np.float32), trt.PluginFieldType.FLOAT32)
     pfc.append(pf_strides)
 
 
