@@ -5,9 +5,6 @@ from torch2trt.module_test import add_module_test
 @tensorrt_converter('torch.mean')
 @tensorrt_converter('torch.Tensor.mean')
 def convert_mean(ctx):
-    support_dynamic_shape = False
-    if hasattr(ctx, "support_dynamic_shape"):
-        support_dynamic_shape = ctx.support_dynamic_shape
     input = ctx.method_args[0]
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
@@ -28,10 +25,7 @@ def convert_mean(ctx):
     # create axes bitmask for reduce layer
     axes = 0
     for d in dim:
-        if not support_dynamic_shape:
-            axes |= 1 << (d - 1) # -1 to remove batch dimension
-        else:
-            axes |= 1<<d
+        axes |= 1<<d
         
     # get whether to keep dimensions
     if 'keepdim' in ctx.method_kwargs:

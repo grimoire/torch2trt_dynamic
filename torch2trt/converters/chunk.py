@@ -6,13 +6,6 @@ from .split import convert_split
 @tensorrt_converter('torch.chunk')
 @tensorrt_converter('torch.Tensor.chunk')
 def convert_chunk(ctx):
-    support_dynamic_shape = False
-    if hasattr(ctx, "support_dynamic_shape"):
-        support_dynamic_shape = ctx.support_dynamic_shape
-
-    if not support_dynamic_shape:
-        convert_split(ctx)
-        return
 
     # https://github.com/pytorch/pytorch/blob/b90fc52c687a6851047f18ec9d06fb998efe99dd/aten/src/ATen/native/TensorShape.cpp
 

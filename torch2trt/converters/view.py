@@ -1,14 +1,12 @@
 from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
 from .size import IntWarper
+import logging
 
 
 @tensorrt_converter('torch.Tensor.reshape')
 @tensorrt_converter('torch.Tensor.view')
 def convert_view(ctx):
-    support_dynamic_shape = False
-    if hasattr(ctx, "support_dynamic_shape"):
-        support_dynamic_shape = ctx.support_dynamic_shape
         
     input = ctx.method_args[0]
     size = get_arg(ctx, 'shape', pos=1, default=[])
@@ -31,26 +29,24 @@ def convert_view(ctx):
             break
 
     ## compute shape tensor
-    if support_dynamic_shape and is_shape_tensor:
+    if is_shape_tensor:
         shape_trt = []
         for idx, s in enumerate(size):
             if isinstance(s, IntWarper):
                 shape_trt.append(s._trt)
             else:
                 if s<0:
-                    print("warning: negative index of view/reshape might cause overflow!")
+                    logging.debug("negative index of view/reshape might cause overflow!")
                 const_shape_trt = trt_(ctx.network, input.new_tensor([s],dtype=torch.int32))
                 shape_trt.append(const_shape_trt)
 
         shape_trt = ctx.network.add_concatenation(shape_trt).get_output(0)
 
     layer = ctx.network.add_shuffle(input_trt)
-    if support_dynamic_shape and is_shape_tensor:
+    if is_shape_tensor:
         layer.set_input(1, shape_trt)
-    elif support_dynamic_shape:
-        layer.reshape_dims = output.shape
     else:
-        layer.reshape_dims = tuple(output.shape[1:])
+        layer.reshape_dims = output.shape
     output._trt = layer.get_output(0)
 
 

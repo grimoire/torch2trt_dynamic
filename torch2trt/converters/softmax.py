@@ -6,9 +6,6 @@ from torch2trt.module_test import add_module_test
 @tensorrt_converter('torch.softmax')
 @tensorrt_converter('torch.nn.functional.softmax')
 def convert_softmax(ctx):
-    support_dynamic_shape = False
-    if hasattr(ctx, "support_dynamic_shape"):
-        support_dynamic_shape = ctx.support_dynamic_shape
 
     input = ctx.method_args[0]
     input_trt = trt_(ctx.network, input)
@@ -22,10 +19,6 @@ def convert_softmax(ctx):
         dim = len(input.shape)+dim
 
     # axes = 1 << (dim - 1)
-    if not support_dynamic_shape:
-        dim -= 1
-        if dim<0:
-            print("can't do log softmax on batch dims.")
     axes = 1<<dim
 
     layer = ctx.network.add_softmax(input=input_trt)

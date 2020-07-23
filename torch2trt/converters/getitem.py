@@ -29,7 +29,6 @@ def convert_tensor_getitem(ctx):
     slices = ctx.method_args[1]
     output = ctx.method_return
 
-    support_dynamic_shape = ctx.support_dynamic_shape
     
     # input_trt = input._trt
     input_trt = trt_(ctx.network, input)
@@ -66,9 +65,6 @@ def convert_tensor_getitem(ctx):
         new_slices.append(slice(None, None, None))
             
     # Step 2 - Remove batch from slices (TRT from this point)
-    
-    if not support_dynamic_shape:
-        slices = tuple(new_slices[1:]) # remove batch
     
     # Step 3 - Add slice layer (will currently ignore 'None' slices)
     
@@ -160,23 +156,18 @@ def convert_tensor_getitem(ctx):
     
     if len(erase_dims) + len(add_dims)>0:
         layer = ctx.network.add_shuffle(output_trt)
-        if support_dynamic_shape:
-            ## full output shape
-            out_shape_trt = [tensor_trt_get_shape_trt(ctx.network, output_trt, i, 1) for i in range(len(input.shape))]
-            ## if slice is None
-            for add in add_dims[::-1]:
-                out_shape_trt = out_shape_trt[:add] + [one_trt] + out_shape_trt[add:]
-            ## if slice is Int
-            for e in erase_dims:
-                out_shape_trt[e] = None
-            out_shape_trt = list(filter(lambda x: x is not None, out_shape_trt))
-            out_shape_trt = ctx.network.add_concatenation(out_shape_trt).get_output(0)
-            layer.set_input(1, out_shape_trt)
-            # layer.reshape_dims = tuple(output.shape) # exclude batch
-        else:
-            # reshape_dims = [output_trt.shape[e] for e, s in enumerate(slices) if isinstance(s,slice)]
-            # layer.reshape_dims = tuple(reshape_dims)
-            layer.reshape_dims = tuple(output.shape[1:]) # exclude batch
+        ## full output shape
+        out_shape_trt = [tensor_trt_get_shape_trt(ctx.network, output_trt, i, 1) for i in range(len(input.shape))]
+        ## if slice is None
+        for add in add_dims[::-1]:
+            out_shape_trt = out_shape_trt[:add] + [one_trt] + out_shape_trt[add:]
+        ## if slice is Int
+        for e in erase_dims:
+            out_shape_trt[e] = None
+        out_shape_trt = list(filter(lambda x: x is not None, out_shape_trt))
+        out_shape_trt = ctx.network.add_concatenation(out_shape_trt).get_output(0)
+        layer.set_input(1, out_shape_trt)
+        # layer.reshape_dims = tuple(output.shape) # exclude batch
         output_trt = layer.get_output(0)
         
     output._trt = output_trt

@@ -8,9 +8,6 @@ from .shape_converter import ShapeConverter
 
 # UTILITY FUNCTIONS
 
-support_dynamic_shape = True
-
-
 def torch_dtype_to_trt(dtype):
     if dtype == torch.int8:
         return trt.int8
@@ -79,10 +76,7 @@ def torch_dim_to_trt_axes(dim):
     # create axes bitmask for reduce layer
     axes = 0
     for d in dim:
-        if support_dynamic_shape:
-            axes |= 1 << (d)
-        else:
-            axes |= 1 << (d - 1)  # -1 to remove batch dimension
+        axes |= 1 << (d)
 
     return axes
 
@@ -290,7 +284,6 @@ class ConversionHook(object):
 
 class ConversionContext(object):
     def __init__(self, network, converters=CONVERTERS):
-        self.support_dynamic_shape = support_dynamic_shape
         self.network = network
         self.lock = False
         self.method_args = None
@@ -317,20 +310,18 @@ class ConversionContext(object):
 
         for i, torch_input in enumerate(torch_inputs):
             if not hasattr(torch_input, '_trt'):
-                if support_dynamic_shape:
-                    if opt_shape_param is not None:
-                        # input_shape = (-1,)*len(torch_input.shape)
-                        input_shape = []
-                        for idx in range(len(torch_input.shape)):
-                            if opt_shape_param[i][0][idx] == opt_shape_param[i][1][idx] == opt_shape_param[i][2][idx]:
-                                input_shape.append(torch_input.shape[idx])
-                            else:
-                                input_shape.append(-1)
-                        input_shape = tuple(input_shape)
-                    else:
-                        input_shape = tuple(torch_input.shape)
+                if opt_shape_param is not None:
+                    # input_shape = (-1,)*len(torch_input.shape)
+                    input_shape = []
+                    for idx in range(len(torch_input.shape)):
+                        if opt_shape_param[i][0][idx] == opt_shape_param[i][1][idx] == opt_shape_param[i][2][idx]:
+                            input_shape.append(torch_input.shape[idx])
+                        else:
+                            input_shape.append(-1)
+                    input_shape = tuple(input_shape)
                 else:
-                    input_shape = tuple(torch_input.shape)[1:]
+                    input_shape = tuple(torch_input.shape)
+
                 trt_tensor = self.network.add_input(
                     name=names[i],
                     shape=input_shape,
@@ -348,8 +339,8 @@ class ConversionContext(object):
             trt_tensor = torch_output._trt
             trt_tensor.name = names[i]
             trt_tensor.location = torch_device_to_trt(torch_output.device)
-            if not support_dynamic_shape:
-                trt_tensor.dtype = torch_dtype_to_trt(torch_output.dtype)
+            # if not support_dynamic_shape:
+            #     trt_tensor.dtype = torch_dtype_to_trt(torch_output.dtype)
             self.network.mark_output(trt_tensor)
 
 
@@ -385,8 +376,8 @@ class TRTModule(torch.nn.Module):
 
         for i, input_name in enumerate(self.input_names):
             idx = self.engine.get_binding_index(input_name)
-            if support_dynamic_shape:
-                self.context.set_binding_shape(idx, tuple(inputs[i].shape))
+            
+            self.context.set_binding_shape(idx, tuple(inputs[i].shape))
             bindings[idx] = inputs[i].data_ptr()
 
         # create output tensors
@@ -394,22 +385,15 @@ class TRTModule(torch.nn.Module):
         for i, output_name in enumerate(self.output_names):
             idx = self.engine.get_binding_index(output_name)
             dtype = torch_dtype_from_trt(self.engine.get_binding_dtype(idx))
-            if support_dynamic_shape:
-                shape = tuple(self.context.get_binding_shape(idx))
-            else:
-                shape = (batch_size, ) + \
-                    tuple(self.engine.get_binding_shape(idx))
+            shape = tuple(self.context.get_binding_shape(idx))
+
             device = torch_device_from_trt(self.engine.get_location(idx))
             output = torch.empty(size=shape, dtype=dtype, device=device)
             outputs[i] = output
             bindings[idx] = output.data_ptr()
 
-        if support_dynamic_shape:
-            self.context.execute_async_v2(
-                bindings, torch.cuda.current_stream().cuda_stream)
-        else:
-            self.context.execute_async(
-                batch_size, bindings, torch.cuda.current_stream().cuda_stream)
+        self.context.execute_async_v2(
+            bindings, torch.cuda.current_stream().cuda_stream)
 
         outputs = tuple(outputs)
         if len(outputs) == 1:
@@ -440,20 +424,13 @@ def torch2trt(module,
     inputs_in = inputs
 
     # copy inputs to avoid modifications to source data
-    if support_dynamic_shape:
-        inputs = [tensor.clone() for tensor in inputs]
-    else:
-        inputs = [tensor.clone()[0:1]
-                  for tensor in inputs]  # only run single entry
+    inputs = [tensor.clone() for tensor in inputs]
 
     logger = trt.Logger(log_level)
     builder = trt.Builder(logger)
-    if support_dynamic_shape:
-        EXPLICIT_BATCH = 1 << (int)(
-            trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
-        network = builder.create_network(EXPLICIT_BATCH)
-    else:
-        network = builder.create_network()
+    EXPLICIT_BATCH = 1 << (int)(
+        trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+    network = builder.create_network(EXPLICIT_BATCH)
 
     with ShapeConverter(), ConversionContext(network) as ctx:
 
@@ -476,27 +453,26 @@ def torch2trt(module,
         builder.max_batch_size = max_batch_size
         builder.strict_type_constraints = strict_type_constraints
 
-        if support_dynamic_shape:
-            config = builder.create_builder_config()
-            config.max_workspace_size = max_workspace_size
-            profile = builder.create_optimization_profile()
+        config = builder.create_builder_config()
+        config.max_workspace_size = max_workspace_size
+        profile = builder.create_optimization_profile()
 
-            if input_names is None:
-                input_names = ['input_%d' % i for i in range(len(inputs))]
-            for input_index, input_tensor in enumerate(inputs):
-                if opt_shape_param is not None:
-                    min_shape = tuple(opt_shape_param[input_index][0][:])
-                    opt_shape = tuple(opt_shape_param[input_index][1][:])
-                    max_shape = tuple(opt_shape_param[input_index][2][:])
-                else:
-                    opt_shape = tuple(input_tensor.shape)
-                    min_shape = opt_shape
-                    max_shape = opt_shape
-                profile.set_shape(
-                    input_names[input_index], min_shape, opt_shape, max_shape)
-            config.add_optimization_profile(profile)
-            if fp16_mode:
-                config.set_flag(trt.BuilderFlag.FP16)
+        if input_names is None:
+            input_names = ['input_%d' % i for i in range(len(inputs))]
+        for input_index, input_tensor in enumerate(inputs):
+            if opt_shape_param is not None:
+                min_shape = tuple(opt_shape_param[input_index][0][:])
+                opt_shape = tuple(opt_shape_param[input_index][1][:])
+                max_shape = tuple(opt_shape_param[input_index][2][:])
+            else:
+                opt_shape = tuple(input_tensor.shape)
+                min_shape = opt_shape
+                max_shape = opt_shape
+            profile.set_shape(
+                input_names[input_index], min_shape, opt_shape, max_shape)
+        config.add_optimization_profile(profile)
+        if fp16_mode:
+            config.set_flag(trt.BuilderFlag.FP16)
 
     if int8_mode:
 
@@ -504,20 +480,11 @@ def torch2trt(module,
         if int8_calib_dataset is None:
             int8_calib_dataset = TensorBatchDataset(inputs_in)
 
-        if support_dynamic_shape:
-            config.set_flag(trt.BuilderFlag.INT8)
-            config.int8_calibrator = DatasetCalibrator(
-                inputs, int8_calib_dataset, batch_size=1, algorithm=int8_calib_algorithm)
-        else:
-            builder.int8_mode = True
-            # @TODO(jwelsh):  Should we set batch_size=max_batch_size?  Need to investigate memory consumption
-            builder.int8_calibrator = DatasetCalibrator(
-                inputs, int8_calib_dataset, batch_size=1, algorithm=int8_calib_algorithm)
-
-    if support_dynamic_shape:
-        engine = builder.build_engine(network, config)
-    else:
-        engine = builder.build_cuda_engine(network)
+        config.set_flag(trt.BuilderFlag.INT8)
+        config.int8_calibrator = DatasetCalibrator(
+            inputs, int8_calib_dataset, batch_size=1, algorithm=int8_calib_algorithm)
+                
+    engine = builder.build_engine(network, config)
 
     module_trt = TRTModule(engine, ctx.input_names, ctx.output_names)
 

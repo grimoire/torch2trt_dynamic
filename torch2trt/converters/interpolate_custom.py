@@ -6,9 +6,6 @@ from .size import IntWarper
 @tensorrt_converter('torch.nn.functional.interpolate')
 def convert_interpolate(ctx):
 
-    support_dynamic_shape = False
-    if hasattr(ctx, "support_dynamic_shape"):
-        support_dynamic_shape = ctx.support_dynamic_shape
     input = ctx.method_args[0]
 
     try:
@@ -48,7 +45,7 @@ def convert_interpolate(ctx):
                 is_shape_tensor = True
                 break
 
-    if support_dynamic_shape and is_shape_tensor:
+    if is_shape_tensor:
         shape_trt = []
         size = tuple(input.shape[:(len(input.shape)-len(size))]) + tuple(size)
         for s in size:
@@ -61,18 +58,13 @@ def convert_interpolate(ctx):
 
     layer = ctx.network.add_resize(input_trt)
     
-    if support_dynamic_shape and is_shape_tensor:
+    if is_shape_tensor:
         layer.set_input(1, shape_trt)
     elif scale_factor is not None:
         scale_factor = (1,)*2 + tuple(scale_factor)
-        if not support_dynamic_shape:
-            scale_factor = scale_factor[1:]
         layer.scales = scale_factor
     else:
-        if support_dynamic_shape:
-            layer.shape = tuple(output.shape)
-        else:
-            layer.shape = tuple(output.shape[1:])
+        layer.shape = tuple(output.shape)
     layer.align_corners = align_corners
 
     if mode=="nearest":

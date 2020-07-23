@@ -18,14 +18,8 @@ def __convert_max_elementwise(ctx):
 def __convert_max_reduce(ctx):
 
     if isinstance(ctx.method_return, torch.Tensor):
-        support_dynamic_shape = False
-        if hasattr(ctx, "support_dynamic_shape"):
-            support_dynamic_shape = ctx.support_dynamic_shape
         input = ctx.method_args[0]
-        if support_dynamic_shape:
-            dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(0, input.ndim)))
-        else:
-            dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(1,input.ndim)))
+        dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(0, input.ndim)))
         keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
         input_trt= trt_(ctx.network, input)
         output_val = ctx.method_return

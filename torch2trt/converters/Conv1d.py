@@ -4,9 +4,6 @@ from torch2trt.module_test import add_module_test
 
 @tensorrt_converter('torch.nn.Conv1d.forward')
 def convert_Conv1d(ctx):
-    support_dynamic_shape = False
-    if hasattr(ctx, "support_dynamic_shape"):
-        support_dynamic_shape = ctx.support_dynamic_shape
         
     module = ctx.method_args[0]
     input = ctx.method_args[1]
@@ -25,15 +22,11 @@ def convert_Conv1d(ctx):
         bias = module.bias.detach().cpu().numpy()
         
     # reshape to 2D
-    if not support_dynamic_shape:
-        layer = ctx.network.add_shuffle(input_trt)
-        layer.reshape_dims = (-1, input.shape[-1], 1)
-    else:
-        input_shape_trt = ctx.network.add_shape(input_trt).get_output(0)
-        one_trt = trt_(ctx.network, torch.tensor([1],dtype=torch.int32).to(input.device))
-        new_input_shape_trt = ctx.network.add_concatenation([input_shape_trt, one_trt]).get_output(0)
-        layer = ctx.network.add_shuffle(input_trt)
-        layer.set_input(1, new_input_shape_trt)
+    input_shape_trt = ctx.network.add_shape(input_trt).get_output(0)
+    one_trt = trt_(ctx.network, torch.tensor([1],dtype=torch.int32).to(input.device))
+    new_input_shape_trt = ctx.network.add_concatenation([input_shape_trt, one_trt]).get_output(0)
+    layer = ctx.network.add_shuffle(input_trt)
+    layer.set_input(1, new_input_shape_trt)
 
     
     layer = ctx.network.add_convolution(
@@ -51,14 +44,10 @@ def convert_Conv1d(ctx):
         
     # reshape back to 1D
     conv_out_trt = layer.get_output(0)
-    if not support_dynamic_shape:
-        layer = ctx.network.add_shuffle(conv_out_trt)
-        layer.reshape_dims = (-1, output.shape[-1])
-    else:
-        out_shape_trt = ctx.network.add_shape(conv_out_trt).get_output(0)
-        new_out_shape_trt = ctx.network.add_slice(out_shape_trt, [0],[3],[1]).get_output(0)
-        layer = ctx.network.add_shuffle(conv_out_trt)
-        layer.set_input(1, new_out_shape_trt)
+    out_shape_trt = ctx.network.add_shape(conv_out_trt).get_output(0)
+    new_out_shape_trt = ctx.network.add_slice(out_shape_trt, [0],[3],[1]).get_output(0)
+    layer = ctx.network.add_shuffle(conv_out_trt)
+    layer.set_input(1, new_out_shape_trt)
         
     output._trt = layer.get_output(0)
 

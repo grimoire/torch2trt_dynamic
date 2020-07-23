@@ -6,9 +6,6 @@ from torch2trt.module_test import add_module_test
 @tensorrt_converter('torch.topk')
 @tensorrt_converter('torch.Tensor.topk')
 def convert_topk(ctx):
-    support_dynamic_shape = False
-    if hasattr(ctx, "support_dynamic_shape"):
-        support_dynamic_shape = ctx.support_dynamic_shape
 
     input = ctx.method_args[0]
 
@@ -29,9 +26,6 @@ def convert_topk(ctx):
         layer.reshape_dims = (1,) + tuple(input_trt.shape)
         input_trt = layer.get_output(0)
         axis+=1
-
-    if not support_dynamic_shape:
-        axis-=1
 
     layer = ctx.network.add_topk(input_trt, topkOp, k, 1<<axis)
 
