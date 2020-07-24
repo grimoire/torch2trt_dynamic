@@ -37,3 +37,18 @@ def convert_float(ctx):
 @tensorrt_converter('torch.Tensor.bool')
 def convert_bool(ctx):
     convert_type(ctx, trt.DataType.BOOL)
+
+
+
+@tensorrt_converter('torch.Tensor.type_as')
+def convert_type_as(ctx):
+    input = ctx.method_args[0]
+    other = ctx.method_args[1]
+    output = ctx.method_return
+
+    input_trt = trt_(ctx.network, input)
+    other_trt = trt_(ctx.network, other)
+
+    layer = ctx.network.add_identity(input_trt)
+    layer.set_output_type(0, other_trt.dtype)
+    output._trt = layer.get_output(0)

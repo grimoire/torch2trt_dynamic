@@ -37,7 +37,8 @@ def __add_clamp(network, trt_input, val, op):
 def convert_clamp_min(ctx):
     input = ctx.method_args[0]
     input_trt = trt_(ctx.network, input)
-    val = ctx.method_args[1]
+    val = get_arg(ctx, 'min', pos=1, default=0)
+    # val = ctx.method_args[1]
     output = ctx.method_return
     
     layer = __add_clamp(ctx.network, input_trt, val, trt.ElementWiseOperation.MAX)
@@ -73,7 +74,7 @@ def test_tensor_clamp_min():
 def convert_clamp_max(ctx):
     input = ctx.method_args[0]
     input_trt = trt_(ctx.network, input)
-    val = ctx.method_args[1]
+    val = get_arg(ctx, 'max', pos=1, default=0)
     output = ctx.method_return
     
     layer = __add_clamp(ctx.network, input_trt, val, trt.ElementWiseOperation.MIN)

@@ -1,7 +1,8 @@
 from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
 import torch
-from .size import get_intwarper_trt
+from .size import get_intwarper_trt, IntWarper
+from collections.abc import Iterable
 
 
 def slice_to_trt(dim_size, dim_slice):
@@ -40,6 +41,7 @@ def convert_tensor_getitem(ctx):
     num_ellipsis = len(input.shape) - num_slice_types(slices)
     
     new_slices = []
+    new_gather = []
 
     erase_dims = []
     add_dims = []
@@ -48,24 +50,28 @@ def convert_tensor_getitem(ctx):
         if s is Ellipsis:
             while num_ellipsis > 0:
                 new_slices.append(slice(None, None, None))
+                new_gather.append(None)
                 num_ellipsis -= 1
         elif isinstance(s, slice):
             new_slices.append(s)
+            new_gather.append(None)
         elif s is None:
             add_dims.append(index)
             # new_slices.append(None)
         elif isinstance(s, int):
             erase_dims.append(index)
             new_slices.append(s)
-        elif isinstance(s, torch.Tensor):
+            new_gather.append(None)
+        elif isinstance(s, Iterable):
+            # gather
             new_slices.append(slice(None, None, None))
+            new_gather.append(s)
             
     # fill missing slices at end
     while num_slice_types(new_slices) < len(input.shape):
         new_slices.append(slice(None, None, None))
-            
-    # Step 2 - Remove batch from slices (TRT from this point)
-    
+        new_gather.append(None)
+        
     # Step 3 - Add slice layer (will currently ignore 'None' slices)
     
     starts = []
@@ -83,7 +89,8 @@ def convert_tensor_getitem(ctx):
         
         if input_dim >= len(input_trt.shape):
             break
-            
+        
+        ### slice shape and trt slice shape
         input_size = int(input.shape[input_dim])
         if isinstance(s, slice):
             start, size, stride = slice_to_trt(input_size, s)
@@ -124,6 +131,9 @@ def convert_tensor_getitem(ctx):
             if s<0:
                 need_dynamic_input = True
                 start_trt = ctx.network.add_elementwise(dim_shape_trt, trt_(ctx.network, s), trt.ElementWiseOperation.SUM).get_output(0)
+            elif isinstance(s, IntWarper):
+                need_dynamic_input = True
+                start_trt = get_intwarper_trt(s, ctx)
             else:
                 start_trt = get_intwarper_trt(s, ctx)
             starts_shape_trt.append(start_trt)
@@ -144,15 +154,19 @@ def convert_tensor_getitem(ctx):
         output_trt = slice_layer.get_output(0)
 
     # Step 3.5 - Add gather layer if necessary
-    gather_index = [e for e, s in enumerate(slices) if isinstance(s, torch.Tensor) and (s.dtype==torch.int32 or s.dtype==torch.long)]
-    for gidx in gather_index:
-        index_tensor = slices[gidx]
+    for gidx, gather_value in enumerate(new_gather):
+        if gather_value is None:
+            continue
+        if isinstance(gather_value, torch.Tensor):
+            index_tensor = gather_value
+            if not hasattr(index_tensor, "_trt"):
+                index_tensor = index_tensor.int()
+        else:
+            index_tensor = input.new_tensor(gather_value).int()
         index_tensor_trt = trt_(ctx.network, index_tensor)
         output_trt = ctx.network.add_gather(output_trt, index_tensor_trt, gidx).get_output(0)
     
     # Step 4 - Add shuffle layer to insert dimensions for 'None' slices and remove dimensions for 'int' slices
-    
-    # num_non_slice = len([s for s in new_slices if not isinstance(s, slice)])
     
     if len(erase_dims) + len(add_dims)>0:
         layer = ctx.network.add_shuffle(output_trt)
