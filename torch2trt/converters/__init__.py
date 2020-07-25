@@ -67,6 +67,7 @@ from .argmax import *
 from .argmin import *
 from .expand import *
 from .cast_type import *
+from .logical import *
 
 try:
     # custom plugin support

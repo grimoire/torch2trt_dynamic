@@ -9,7 +9,9 @@ from .shape_converter import ShapeConverter
 # UTILITY FUNCTIONS
 
 def torch_dtype_to_trt(dtype):
-    if dtype == torch.int8:
+    if dtype == torch.bool:
+        return trt.bool
+    elif dtype == torch.int8:
         return trt.int8
     elif dtype == torch.int32:
         return trt.int32
@@ -22,7 +24,9 @@ def torch_dtype_to_trt(dtype):
 
 
 def torch_dtype_from_trt(dtype):
-    if dtype == trt.int8:
+    if dtype == trt.bool:
+        return torch.bool
+    elif dtype == trt.int8:
         return torch.int8
     elif dtype == trt.int32:
         return torch.int32
