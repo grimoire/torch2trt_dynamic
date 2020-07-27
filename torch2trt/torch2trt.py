@@ -151,6 +151,8 @@ def trt_(network, *tensors):
             # don't exclude batch when adding constants...?
             shape = tuple(t.shape)
             weight = t.detach().cpu().numpy()
+            if weight.dtype == np.float64:
+                weight = weight.astype(np.float32)
             t._trt = network.add_constant(shape, weight).get_output(0)
             trt_tensor = t._trt
 

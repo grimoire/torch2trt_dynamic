@@ -179,7 +179,10 @@ def convert_tensor_getitem(ctx):
         for e in erase_dims:
             out_shape_trt[e] = None
         out_shape_trt = list(filter(lambda x: x is not None, out_shape_trt))
-        out_shape_trt = ctx.network.add_concatenation(out_shape_trt).get_output(0)
+        if len(out_shape_trt)>0:
+            out_shape_trt = ctx.network.add_concatenation(out_shape_trt).get_output(0)
+        else:
+            out_shape_trt = trt_(ctx.network, input.new_ones((1,)).int())
         layer.set_input(1, out_shape_trt)
         # layer.reshape_dims = tuple(output.shape) # exclude batch
         output_trt = layer.get_output(0)

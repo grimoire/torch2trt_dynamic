@@ -8,12 +8,12 @@ def convert_mean(ctx):
     input = ctx.method_args[0]
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
+    dim = get_arg(ctx, 'dim', pos=1, default=None)
+    keep_dims = get_arg(ctx, 'keepdim', pos=2, default=False)
     
     # get dims from args or kwargs
-    if 'dim' in ctx.method_kwargs: 
-        dim = ctx.method_kwargs['dim']
-    elif len(ctx.method_args) >= 2:
-        dim = ctx.method_args[1]
+    if dim is None:
+        dim = tuple(range(len(input.shape)))
         
     # convert list to tuple
     if isinstance(dim, list):
@@ -21,20 +21,14 @@ def convert_mean(ctx):
         
     if not isinstance(dim, tuple):
         dim = (dim, )
+
+    dim = tuple([d if d>=0 else len(input.shape)+d for d in dim])
         
     # create axes bitmask for reduce layer
     axes = 0
     for d in dim:
         axes |= 1<<d
-        
-    # get whether to keep dimensions
-    if 'keepdim' in ctx.method_kwargs:
-        keep_dims = ctx.method_kwargs['keepdim']
-    elif len(ctx.method_args) == 3:
-        keep_dims = ctx.method_args[2]
-    else:
-        keep_dims = False
-        
+
     layer = ctx.network.add_reduce(input_trt, trt.ReduceOperation.AVG, axes, keep_dims)
     output._trt = layer.get_output(0)
 
