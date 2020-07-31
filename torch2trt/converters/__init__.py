@@ -79,6 +79,7 @@ try:
     from .adaptive_max_pool2d import *
     from .AdaptiveAvgPool2d import *
     from .AdaptiveMaxPool2d import *
-    from .meshgrid import create_meshgrid_plugin
+    from .meshgrid import convert_meshgrid
+    from .grid_sample import convert_grid_sample
 except:
     print("plugin not found.")
