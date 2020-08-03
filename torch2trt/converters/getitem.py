@@ -107,7 +107,7 @@ def convert_tensor_getitem(ctx):
             strides_shape_trt.append(stride_trt)
             if size<0:
                 need_dynamic_input = True
-                size_trt = ctx.network.add_elementwise(dim_shape_trt, trt_(ctx.network, size), trt.ElementWiseOperation.SUM).get_output(0)
+                size_trt = ctx.network.add_elementwise(dim_shape_trt, trt_(ctx.network, s.stop), trt.ElementWiseOperation.SUM).get_output(0)
                 size_trt = ctx.network.add_elementwise(size_trt, start_trt, trt.ElementWiseOperation.SUB).get_output(0)
                 size_trt = ctx.network.add_elementwise(size_trt, one_trt, trt.ElementWiseOperation.SUB).get_output(0)
                 size_trt = ctx.network.add_elementwise(size_trt, stride_trt, trt.ElementWiseOperation.DIV).get_output(0)
