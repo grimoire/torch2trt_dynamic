@@ -65,7 +65,6 @@ from .exview import *
 from .size import *
 from .argmax import *
 from .argmin import *
-from .expand import *
 from .cast_type import *
 from .logical import *
 from .std import *
@@ -74,6 +73,7 @@ try:
     # custom plugin support
     from .GroupNorm import *
     from .repeat import *
+    from .expand import *
     from .gather import *
     from .adaptive_avg_pool2d import *
     from .adaptive_max_pool2d import *

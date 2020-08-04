@@ -5,7 +5,7 @@ from .repeat import *
 
 
 @tensorrt_converter('torch.Tensor.expand')
-def convert_argmax(ctx):
+def convert_expand(ctx):
     
     old_args = ctx.method_args
     input = ctx.method_args[0]
