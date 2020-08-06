@@ -68,6 +68,7 @@ from .argmin import *
 from .cast_type import *
 from .logical import *
 from .std import *
+from .masked_fill import *
 
 try:
     # custom plugin support
