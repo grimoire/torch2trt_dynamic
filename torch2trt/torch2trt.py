@@ -384,7 +384,7 @@ class TRTModule(torch.nn.Module):
             idx = self.engine.get_binding_index(input_name)
             
             self.context.set_binding_shape(idx, tuple(inputs[i].shape))
-            bindings[idx] = inputs[i].data_ptr()
+            bindings[idx] = inputs[i].contiguous().data_ptr()
 
         # create output tensors
         outputs = [None] * len(self.output_names)

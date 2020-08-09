@@ -43,7 +43,7 @@ def convert_chunk(ctx):
         head_start_trt = ctx.network.add_concatenation([zero_trt]*dim).get_output(0)
 
     if tail_shape_trt is not None:
-        tail_start_trt = ctx.network.add_concatenation([zero_trt]*dim).get_output(0)
+        tail_start_trt = ctx.network.add_concatenation([zero_trt]*(len(input.shape)-1-dim)).get_output(0)
 
     start_trt = []
     size_trt = []
