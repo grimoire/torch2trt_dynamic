@@ -15,6 +15,11 @@ def __add_clamp(network, trt_input, val, op):
         layer.set_output_type(0, trt_input.dtype)
         val_trt = layer.get_output(0)
 
+        # convert 2
+        layer = network.add_unary(val_trt, trt.UnaryOperation.FLOOR)
+        layer.set_output_type(0, trt_input.dtype)
+        val_trt = layer.get_output(0)
+
         # reshape
         layer = network.add_shuffle(val_trt)
         layer.reshape_dims = val_shape
