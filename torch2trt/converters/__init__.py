@@ -82,5 +82,6 @@ try:
     from .AdaptiveMaxPool2d import *
     from .meshgrid import convert_meshgrid
     from .grid_sample import convert_grid_sample
+    from .flip import convert_flip
 except:
     print("plugin not found.")
