@@ -7,3 +7,4 @@ from .create_adaptivepool_plugin import create_adaptivepool_plugin
 from .create_meshgrid_plugin import create_meshgrid_plugin
 from .create_gridsample_plugin import create_gridsample_plugin
 from .create_torchflip_plugin import create_torchflip_plugin
+from .create_torchcummaxmin_plugin import create_torchcummaxmin_plugin

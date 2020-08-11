@@ -83,5 +83,7 @@ try:
     from .meshgrid import convert_meshgrid
     from .grid_sample import convert_grid_sample
     from .flip import convert_flip
+    from .cummax import convert_cummax
+    from .cummin import convert_cummin
 except:
     print("plugin not found.")
