@@ -4,7 +4,7 @@ from torch2trt.plugins import *
 
 @tensorrt_converter('torch.cumprod')
 @tensorrt_converter('torch.Tensor.cumprod')
-def convert_cumsum(ctx):
+def convert_cumprod(ctx):
     input = ctx.method_args[0]
     dim = get_arg(ctx, 'dim', pos=1, default=0)
     cum_type = 1
