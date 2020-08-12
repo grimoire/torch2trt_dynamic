@@ -85,5 +85,7 @@ try:
     from .flip import convert_flip
     from .cummax import convert_cummax
     from .cummin import convert_cummin
+    from .cumsum import convert_cumsum
+    from .cumprod import convert_cumprod
 except:
     print("plugin not found.")
