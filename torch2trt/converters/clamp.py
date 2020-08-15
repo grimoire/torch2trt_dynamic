@@ -15,8 +15,8 @@ def __add_clamp(network, trt_input, val, op):
         layer.set_output_type(0, trt_input.dtype)
         val_trt = layer.get_output(0)
 
-        # convert 2
-        layer = network.add_unary(val_trt, trt.UnaryOperation.FLOOR)
+        # convert 2 / to prevent warning, might remove in future version
+        layer = network.add_elementwise(val_trt, trt_(network, torch.zeros((1,), dtype=torch.float32)), trt.ElementWiseOperation.SUM)
         layer.set_output_type(0, trt_input.dtype)
         val_trt = layer.get_output(0)
 

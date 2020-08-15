@@ -35,8 +35,8 @@ def convert_view(ctx):
             if isinstance(s, IntWarper):
                 shape_trt.append(s._trt)
             else:
-                if s<0:
-                    logging.debug("negative index of view/reshape might cause overflow!")
+                # if s<0:
+                #     logging.debug("negative index of view/reshape might cause overflow!")
                 const_shape_trt = trt_(ctx.network, input.new_tensor([s],dtype=torch.int32))
                 shape_trt.append(const_shape_trt)
 
