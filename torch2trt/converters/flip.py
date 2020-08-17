@@ -9,6 +9,8 @@ def convert_flip(ctx):
     dims = get_arg(ctx, 'dims', pos=1, default=0)
     if isinstance(dims, int):
         dims = [dims]
+    
+    dims = [len(input.shape)+dim if dim<0 else dim for dim in dims]
 
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return

@@ -8,7 +8,7 @@ def convert_pad(ctx):
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
     
-    pad = ctx.method_args[1]
+    pad = get_arg(ctx, 'pad', pos=1, default=[0,0,0,0])
     pre_padding = (pad[2], pad[0])
     post_padding = (pad[3], pad[1])
     
