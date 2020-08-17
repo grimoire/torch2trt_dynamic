@@ -141,6 +141,7 @@ def trt_(network, *tensors):
 
         # GET TRT TENSOR (OR CREATE TRT CONSTANT)
 
+        is_const = False
         # get tensor w/ _trt
         if isinstance(t, torch.Tensor) and hasattr(t, '_trt'):
             trt_tensor = t._trt
@@ -149,15 +150,24 @@ def trt_(network, *tensors):
         elif isinstance(t, torch.Tensor) and not hasattr(t, '_trt'):
             # add leaf tensor
             # don't exclude batch when adding constants...?
+            is_const=True
             shape = tuple(t.shape)
             weight = t.detach().cpu().numpy()
             if weight.dtype == np.float64:
                 weight = weight.astype(np.float32)
             t._trt = network.add_constant(shape, weight).get_output(0)
             trt_tensor = t._trt
+        elif isinstance(t, int) and hasattr(t, '_trt'):
+            # Int warper
+            trt_tensor = t._trt
+            trt_dtype = torch_dtype_to_trt(dtype)
+            layer = network.add_identity(trt_tensor)
+            layer.set_output_type(0, trt_dtype)
+            trt_tensor = layer.get_output(0)
 
         # or... add constant for scalar primitive
         elif isinstance(t, float) or isinstance(t, int):
+            is_const=True
             shape = (1,)# * broadcast_num_dim
             scalar = t * torch.ones(shape, dtype=dtype).cpu().numpy()
             trt_tensor = network.add_constant(shape, scalar).get_output(0)
@@ -167,12 +177,23 @@ def trt_(network, *tensors):
         # MAKE TRT TENSOR BROADCASTABLE IF IT IS NOT ALREADY
 
         if len(trt_tensor.shape) < broadcast_num_dim:
-            # append 1 size dims to front
-            diff = broadcast_num_dim - len(trt_tensor.shape)
-            shape = tuple([1] * diff + list(trt_tensor.shape))
-            layer = network.add_shuffle(trt_tensor)
-            layer.reshape_dims = shape
-            trt_tensor = layer.get_output(0)
+            if is_const:
+                # append 1 size dims to front
+                diff = broadcast_num_dim - len(trt_tensor.shape)
+                shape = tuple([1] * diff + list(trt_tensor.shape))
+                layer = network.add_shuffle(trt_tensor)
+                layer.reshape_dims = shape
+                trt_tensor = layer.get_output(0)
+            else:
+                diff = broadcast_num_dim - len(trt_tensor.shape)
+                shape = (diff,)
+                scalar = torch.ones(shape, dtype=torch.int32).cpu().numpy()
+                trt_ones = network.add_constant(shape, scalar).get_output(0)
+                trt_shape = tensor_trt_get_shape_trt(network, trt_tensor)
+                trt_shape = network.add_concatenation([trt_ones, trt_shape]).get_output(0)
+                layer = network.add_shuffle(trt_tensor)
+                layer.set_input(1, trt_shape)
+                trt_tensor = layer.get_output(0)
 
         trt_tensors[i] = trt_tensor
 

@@ -17,18 +17,12 @@ def convert_expand(ctx):
 
     output = ctx.method_return
 
-
-    size_diff = len(output.shape) - len(input.shape)
-    if size_diff>0:
-        view_input = input.view(1,1,*input.shape)
-        ctx.method_args = [input,[input],["1"]*size_diff + ["a{}".format(idx) for idx in range(input.dim())]]
-        ctx.method_return = view_input
-        convert_exview(ctx)
-        input = view_input
-
     repeat_shape = []
-    for i in range(len(input.shape)):
-        repeat_shape.append(output.shape[i]//input.shape[i])
+    for i in range(output.dim()):
+        if i < output.dim()-input.dim():
+            repeat_shape.append(output.shape[i])
+        else:
+            repeat_shape.append(output.shape[i]//input.shape[i+input.dim()-output.dim()])
     
     ctx.method_args = [input]+repeat_shape
     ctx.method_return = output

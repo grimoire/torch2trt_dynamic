@@ -69,6 +69,7 @@ from .cast_type import *
 from .logical import *
 from .std import *
 from .masked_fill import *
+from .mod import convert_mod
 
 try:
     # custom plugin support
@@ -87,5 +88,6 @@ try:
     from .cummin import convert_cummin
     from .cumsum import convert_cumsum
     from .cumprod import convert_cumprod
+    from .expand_as import convert_expand_as
 except:
     print("plugin not found.")
