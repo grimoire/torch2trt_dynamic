@@ -70,6 +70,7 @@ from .logical import *
 from .std import *
 from .masked_fill import *
 from .mod import convert_mod
+from .narrow import convert_narrow
 
 try:
     # custom plugin support
