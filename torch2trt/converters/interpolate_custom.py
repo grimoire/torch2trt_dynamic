@@ -47,13 +47,16 @@ def convert_interpolate(ctx):
 
     if is_shape_tensor:
         shape_trt = []
-        size = tuple(input.shape[:(len(input.shape)-len(size))]) + tuple(size)
+        # tuple(input.shape[:(len(input.shape)-len(size))]) + 
+        size = tuple(size)
         for s in size:
             if isinstance(s, IntWarper):
                 shape_trt.append(s._trt)
             else:
                 const_shape_trt = trt_(ctx.network, input.new_tensor([s],dtype=torch.int32))
                 shape_trt.append(const_shape_trt)
+        pre_input_shape_trt = tensor_trt_get_shape_trt(ctx.network, input_trt, 0, (len(input.shape)-len(size)))
+        shape_trt = [pre_input_shape_trt] + shape_trt
         shape_trt = ctx.network.add_concatenation(shape_trt).get_output(0)
 
     layer = ctx.network.add_resize(input_trt)
