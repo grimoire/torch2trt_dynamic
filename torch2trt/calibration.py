@@ -22,17 +22,21 @@ class TensorBatchDataset():
     
 class DatasetCalibrator(trt.IInt8Calibrator):
     
-    def __init__(self, inputs, dataset, batch_size=1, algorithm=DEFAULT_CALIBRATION_ALGORITHM):
+    def __init__(self, names, profile, inputs, dataset, batch_size=1, algorithm=DEFAULT_CALIBRATION_ALGORITHM):
         super(DatasetCalibrator, self).__init__()
         
         self.dataset = dataset
         self.batch_size = batch_size
         self.algorithm = algorithm
+        self.names = names
+        self.device = inputs[0].device
         
         # create buffers that will hold data batches
         self.buffers = []
-        for tensor in inputs:
-            size = (batch_size,) + tuple(tensor.shape[1:])
+        if isinstance(inputs, torch.Tensor):
+            inputs = [inputs]
+        for name, tensor in zip(names, inputs):
+            size = tuple(profile.get_shape(name)[1])
             buf = torch.zeros(size=size, dtype=tensor.dtype, device=tensor.device).contiguous()
             self.buffers.append(buf)
             
@@ -45,9 +49,12 @@ class DatasetCalibrator(trt.IInt8Calibrator):
                 
                 idx = self.count % len(self.dataset) # roll around if not multiple of dataset
                 inputs = self.dataset[idx]
-                
+                if isinstance(inputs, torch.Tensor):
+                    inputs = [inputs]
+                        
                 # copy data for (input_idx, dataset_idx) into buffer
                 for buffer, tensor in zip(self.buffers, inputs):
+                    tensor = tensor.to(self.device)
                     buffer[i].copy_(tensor)
                 
                 self.count += 1

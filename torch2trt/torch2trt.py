@@ -476,7 +476,6 @@ def torch2trt(module,
         torch.cuda.empty_cache()
 
         builder.max_workspace_size = max_workspace_size
-        builder.fp16_mode = fp16_mode
         builder.max_batch_size = max_batch_size
         builder.strict_type_constraints = strict_type_constraints
 
@@ -498,18 +497,22 @@ def torch2trt(module,
             profile.set_shape(
                 input_names[input_index], min_shape, opt_shape, max_shape)
         config.add_optimization_profile(profile)
-        if fp16_mode:
-            config.set_flag(trt.BuilderFlag.FP16)
+
+    if fp16_mode:
+        builder.fp16_mode = fp16_mode
+        config.set_flag(trt.BuilderFlag.FP16)
 
     if int8_mode:
-
         # default to use input tensors for calibration
         if int8_calib_dataset is None:
             int8_calib_dataset = TensorBatchDataset(inputs_in)
 
         config.set_flag(trt.BuilderFlag.INT8)
         config.int8_calibrator = DatasetCalibrator(
-            inputs, int8_calib_dataset, batch_size=1, algorithm=int8_calib_algorithm)
+            input_names, profile, inputs_in, int8_calib_dataset, batch_size=opt_shape[0], algorithm=int8_calib_algorithm)
+        config.set_calibration_profile(profile)
+        builder.int8_mode = int8_mode
+        builder.int8_calibrator = config.int8_calibrator
                 
     engine = builder.build_engine(network, config)
 
