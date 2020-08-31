@@ -447,7 +447,8 @@ def torch2trt(module,
               int8_mode=False,
               int8_calib_dataset=None,
               int8_calib_algorithm=DEFAULT_CALIBRATION_ALGORITHM):
-
+    if int8_mode and fp16_mode:
+        fp16_mode = False
     inputs_in = inputs
 
     # copy inputs to avoid modifications to source data
