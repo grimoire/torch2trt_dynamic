@@ -19,7 +19,7 @@ def slice_to_trt(dim_size, dim_slice):
 def num_slice_types(slices):
     num_slice = 0
     for s in slices:
-        if isinstance(s, slice) or isinstance(s, int):
+        if isinstance(s, slice) or isinstance(s, int) or isinstance(s, Iterable):
             num_slice += 1
     return num_slice
 
@@ -45,6 +45,7 @@ def convert_tensor_getitem(ctx):
 
     erase_dims = []
     add_dims = []
+    ellipsis_count = 0
     for index, s in enumerate(slices):
         
         if s is Ellipsis:
@@ -52,14 +53,16 @@ def convert_tensor_getitem(ctx):
                 new_slices.append(slice(None, None, None))
                 new_gather.append(None)
                 num_ellipsis -= 1
+                ellipsis_count += 1
+            ellipsis_count -= 1
         elif isinstance(s, slice):
             new_slices.append(s)
             new_gather.append(None)
         elif s is None:
-            add_dims.append(index)
+            add_dims.append(index + ellipsis_count)
             # new_slices.append(None)
         elif isinstance(s, int):
-            erase_dims.append(index)
+            erase_dims.append(index + ellipsis_count)
             new_slices.append(s)
             new_gather.append(None)
         elif isinstance(s, Iterable):
