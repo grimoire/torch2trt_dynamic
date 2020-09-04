@@ -35,12 +35,14 @@ def convert_or(ctx):
 
 
 @tensorrt_converter('torch.eq')
+@tensorrt_converter('torch.Tensor.eq')
 @tensorrt_converter('torch.Tensor.__eq__')
 def convert_equal(ctx):
     convert_compare(ctx, trt.ElementWiseOperation.EQUAL)
 
 
 @tensorrt_converter('torch.ge')
+@tensorrt_converter('torch.Tensor.ge')
 @tensorrt_converter('torch.Tensor.__ge__')
 def convert_greaterequal(ctx):
     input_a = ctx.method_args[0]
@@ -62,6 +64,7 @@ def convert_greaterequal(ctx):
 
 
 @tensorrt_converter('torch.le')
+@tensorrt_converter('torch.Tensor.le')
 @tensorrt_converter('torch.Tensor.__le__')
 def convert_lessequal(ctx):
     input_a = ctx.method_args[0]
