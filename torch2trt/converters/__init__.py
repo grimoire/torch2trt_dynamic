@@ -71,6 +71,7 @@ from .std import *
 from .masked_fill import *
 from .mod import convert_mod
 from .narrow import convert_narrow
+from .ConvTranspose1d import convert_ConvTranspose1d
 
 try:
     # custom plugin support
