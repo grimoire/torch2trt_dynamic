@@ -114,19 +114,16 @@ def test_tensor_clamp_max():
 @tensorrt_converter('torch.Tensor.clamp')
 def convert_clamp(ctx):
     input = ctx.method_args[0]
-    if len(ctx.method_args)>1:
-        min_val = ctx.method_args[1]
-    else:
-        min_val = ctx.method_kwargs['min']
-    if len(ctx.method_args)>2:
-        max_val = ctx.method_args[2]
-    else:
-        max_val = ctx.method_kwargs['max']
+    min_val = get_arg(ctx, 'min', pos=1, default=None)
+    max_val = get_arg(ctx, 'max', pos=2, default=None)
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
     
-    layer = __add_clamp(ctx.network, input_trt, min_val, trt.ElementWiseOperation.MAX)
-    layer = __add_clamp(ctx.network, layer.get_output(0), max_val, trt.ElementWiseOperation.MIN)
+    if min_val is not None:
+        layer = __add_clamp(ctx.network, input_trt, min_val, trt.ElementWiseOperation.MAX)
+        input_trt = layer.get_output(0)
+    if max_val is not None:
+        layer = __add_clamp(ctx.network, input_trt, max_val, trt.ElementWiseOperation.MIN)
     
     output._trt = layer.get_output(0)
     

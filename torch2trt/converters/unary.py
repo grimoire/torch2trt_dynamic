@@ -133,6 +133,7 @@ def test_abs():
 @tensorrt_converter('torch.neg_')
 @tensorrt_converter('torch.Tensor.neg')
 @tensorrt_converter('torch.Tensor.neg_')
+@tensorrt_converter('torch.Tensor.__neg__')
 def convert_neg(ctx):
     __convert_unary(ctx, trt.UnaryOperation.NEG)
 
