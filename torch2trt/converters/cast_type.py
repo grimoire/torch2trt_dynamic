@@ -13,7 +13,7 @@ def convert_type(ctx, data_type):
     output._trt = layer.get_output(0)
 
 
-# @tensorrt_converter('torch.Tensor.long')
+@tensorrt_converter('torch.Tensor.long')
 @tensorrt_converter('torch.Tensor.int')
 def convert_int(ctx):
     convert_type(ctx, trt.DataType.INT32)
