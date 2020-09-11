@@ -9,3 +9,4 @@ from .create_gridsample_plugin import create_gridsample_plugin
 from .create_torchflip_plugin import create_torchflip_plugin
 from .create_torchcummaxmin_plugin import create_torchcummaxmin_plugin
 from .create_torchcum_plugin import create_torchcum_plugin
+from .create_dcn_plugin import create_dcn_plugin
