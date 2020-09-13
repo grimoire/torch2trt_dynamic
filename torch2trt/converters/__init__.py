@@ -92,5 +92,6 @@ try:
     from .cumprod import convert_cumprod
     from .expand_as import convert_expand_as
     from .deform_conv2d import convert_deform_conv2d
+    from .nms import convert_nms
 except:
     print("plugin not found.")
