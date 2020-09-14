@@ -93,5 +93,6 @@ try:
     from .expand_as import convert_expand_as
     from .deform_conv2d import convert_deform_conv2d
     from .nms import convert_nms
+    from .roi_align import convert_roi_align
 except:
     print("plugin not found.")
