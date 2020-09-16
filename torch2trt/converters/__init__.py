@@ -72,6 +72,10 @@ from .masked_fill import *
 from .mod import convert_mod
 from .narrow import convert_narrow
 from .ConvTranspose1d import convert_ConvTranspose1d
+from .zeros_like import convert_zeros_like
+from .ones_like import convert_ones_like
+from .new_zeros import convert_new_zeros
+from .new_ones import convert_new_ones
 
 try:
     # custom plugin support
