@@ -76,6 +76,8 @@ from .zeros_like import convert_zeros_like
 from .ones_like import convert_ones_like
 from .new_zeros import convert_new_zeros
 from .new_ones import convert_new_ones
+from .arange import convert_arange
+from .linspace import convert_linspace
 
 try:
     # custom plugin support

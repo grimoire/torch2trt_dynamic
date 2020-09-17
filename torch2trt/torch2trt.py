@@ -225,6 +225,24 @@ def tensor_trt_get_shape_trt(network, tensor_trt, start=0, size=None, stride=1):
     return slice_shape_trt(network, shape_trt, start, size, stride)
 
 
+def trt_cast(network, val_trt, data_type):
+    zeros_type = torch_dtype_from_trt(data_type)
+    origin_dtype = val_trt.dtype
+
+    if origin_dtype == data_type:
+        return val_trt
+
+    layer = network.add_identity(val_trt)
+    layer.set_output_type(0, data_type)
+    val_trt = layer.get_output(0)
+
+    layer = network.add_elementwise(trt_(network, torch.zeros((1,), dtype=zeros_type)), val_trt, trt.ElementWiseOperation.SUM)
+    layer.set_output_type(0, data_type)
+    val_trt = layer.get_output(0)
+
+    return val_trt
+
+
 # CONVERSION REGISTRY AND HOOKS
 
 

@@ -2,7 +2,7 @@ from torch2trt.torch2trt import *
 
 
 @tensorrt_converter('torch.Tensor.to')      # WIP
-@tensorrt_converter('torch.Tensor.type_as') # WIP
+@tensorrt_converter('torch.Tensor.cuda')
 @tensorrt_converter('torch.Tensor.detach')
 @tensorrt_converter('torch.Tensor.contiguous')
 @tensorrt_converter('torch.nn.functional.dropout')
