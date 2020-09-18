@@ -78,6 +78,7 @@ from .new_zeros import convert_new_zeros
 from .new_ones import convert_new_ones
 from .arange import convert_arange
 from .linspace import convert_linspace
+from .to import convert_Tensor_to
 
 try:
     # custom plugin support

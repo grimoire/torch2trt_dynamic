@@ -226,7 +226,11 @@ def tensor_trt_get_shape_trt(network, tensor_trt, start=0, size=None, stride=1):
 
 
 def trt_cast(network, val_trt, data_type):
-    zeros_type = torch_dtype_from_trt(data_type)
+    if isinstance(data_type, trt.DataType):
+        zeros_type = torch_dtype_from_trt(data_type)
+    else:
+        zeros_type = data_type
+        data_type = torch_dtype_to_trt(data_type)
     origin_dtype = val_trt.dtype
 
     if origin_dtype == data_type:
@@ -236,9 +240,10 @@ def trt_cast(network, val_trt, data_type):
     layer.set_output_type(0, data_type)
     val_trt = layer.get_output(0)
 
-    layer = network.add_elementwise(trt_(network, torch.zeros((1,), dtype=zeros_type)), val_trt, trt.ElementWiseOperation.SUM)
-    layer.set_output_type(0, data_type)
-    val_trt = layer.get_output(0)
+    if len(val_trt.shape)==1:
+        layer = network.add_elementwise(trt_(network, torch.zeros((1,), dtype=zeros_type)), val_trt, trt.ElementWiseOperation.SUM)
+        layer.set_output_type(0, data_type)
+        val_trt = layer.get_output(0)
 
     return val_trt
 
