@@ -79,6 +79,7 @@ from .new_ones import convert_new_ones
 from .arange import convert_arange
 from .linspace import convert_linspace
 from .to import convert_Tensor_to
+from .floor_divide import convert_floor_div, convert_rfloor_div
 
 try:
     # custom plugin support

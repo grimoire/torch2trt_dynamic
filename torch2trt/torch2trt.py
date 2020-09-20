@@ -160,7 +160,7 @@ def trt_(network, *tensors):
         elif isinstance(t, int) and hasattr(t, '_trt'):
             # Int warper
             trt_tensor = t._trt
-            trt_dtype = torch_dtype_to_trt(dtype)
+            trt_dtype = trt_tensor.dtype
             layer = network.add_identity(trt_tensor)
             layer.set_output_type(0, trt_dtype)
             trt_tensor = layer.get_output(0)

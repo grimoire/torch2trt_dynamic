@@ -1,5 +1,6 @@
 from torch2trt.torch2trt import *
 from torch2trt.module_test import add_module_test
+from .unary import __convert_unary 
 
 
 def convert_compare(ctx, compare_op):
@@ -13,12 +14,14 @@ def convert_compare(ctx, compare_op):
 
 
 @tensorrt_converter('torch.gt')
+@tensorrt_converter('torch.Tensor.gt')
 @tensorrt_converter('torch.Tensor.__gt__')
 def convert_greater(ctx):
     convert_compare(ctx, trt.ElementWiseOperation.GREATER)
 
 
 @tensorrt_converter('torch.lt')
+@tensorrt_converter('torch.Tensor.lt')
 @tensorrt_converter('torch.Tensor.__lt__')
 def convert_less(ctx):
     convert_compare(ctx, trt.ElementWiseOperation.LESS)
@@ -83,3 +86,21 @@ def convert_lessequal(ctx):
     ctx.method_args = [less, equal]
     ctx.method_return = output
     convert_or(ctx)
+
+
+@tensorrt_converter('torch.ne')
+@tensorrt_converter('torch.Tensor.ne')
+@tensorrt_converter('torch.Tensor.__ne__')
+def convert_ne(ctx):
+    input_a = ctx.method_args[0]
+    input_b = ctx.method_args[1]
+    output = ctx.method_return
+
+    equal = input_a==input_b
+
+    ctx.method_return = equal
+    convert_equal(ctx)
+
+    ctx.method_args = [equal]
+    ctx.method_return = output
+    __convert_unary(ctx, trt.UnaryOperation.NOT)
