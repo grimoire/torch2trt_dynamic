@@ -308,3 +308,11 @@ def convert_floor(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_floor():
     return UnaryModule(lambda x: torch.floor(x))
+
+
+#  NOT : Invert
+        
+
+@tensorrt_converter('torch.Tensor.__invert__')
+def convert_invert(ctx):
+    __convert_unary(ctx, trt.UnaryOperation.NOT)
