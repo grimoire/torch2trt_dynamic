@@ -97,9 +97,15 @@ def check_torch_dtype(*tensors):
     for t in tensors:
         if isinstance(t, torch.Tensor):
             if dtype is None:
-                dtype = t.dtype
+                if t.dtype==torch.long:
+                    dtype=torch.int32
+                else:
+                    dtype = t.dtype
             else:
-                assert(dtype == t.dtype)  # , 'Tensor data types must match')
+                if t.dtype==torch.long:
+                    assert(dtype == torch.int32)  # , 'Tensor data types must match')
+                else:
+                    assert(dtype == t.dtype)  # , 'Tensor data types must match')
 
     for t in tensors:
         if isinstance(t, float):
@@ -155,6 +161,8 @@ def trt_(network, *tensors):
             weight = t.detach().cpu().numpy()
             if weight.dtype == np.float64:
                 weight = weight.astype(np.float32)
+            elif weight.dtype == np.int64:
+                weight = weight.astype(np.int32)
             t._trt = network.add_constant(shape, weight).get_output(0)
             trt_tensor = t._trt
         elif isinstance(t, int) and hasattr(t, '_trt'):
