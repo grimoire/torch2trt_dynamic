@@ -104,3 +104,10 @@ def convert_ne(ctx):
     ctx.method_args = [equal]
     ctx.method_return = output
     __convert_unary(ctx, trt.UnaryOperation.NOT)
+
+
+@tensorrt_converter('torch.logical_xor')
+@tensorrt_converter('torch.Tensor.logical_xor')
+@tensorrt_converter('torch.Tensor.__xor__')
+def convert_xor(ctx):
+    convert_compare(ctx, trt.ElementWiseOperation.XOR)
