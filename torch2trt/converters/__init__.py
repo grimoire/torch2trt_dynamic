@@ -74,6 +74,7 @@ from .narrow import convert_narrow
 from .ConvTranspose1d import convert_ConvTranspose1d
 from .zeros_like import convert_zeros_like
 from .ones_like import convert_ones_like
+from .full_like import convert_full_like
 from .new_zeros import convert_new_zeros
 from .new_ones import convert_new_ones
 from .arange import convert_arange
