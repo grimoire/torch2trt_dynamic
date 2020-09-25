@@ -81,6 +81,7 @@ from .arange import convert_arange
 from .linspace import convert_linspace
 from .to import convert_Tensor_to
 from .floor_divide import convert_floor_div, convert_rfloor_div
+from .zeros import convert_zeros
 
 try:
     # custom plugin support
