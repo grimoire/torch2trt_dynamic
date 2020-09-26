@@ -11,6 +11,9 @@ def convert_zeros(ctx):
         dtype = ctx.method_kwargs["dtype"]
     output = ctx.method_return
 
+    if isinstance(size, int):
+        size = (size, )
+
     # check const
     is_const = True
     for s in size:

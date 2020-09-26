@@ -9,6 +9,9 @@ def convert_new_zeros(ctx):
 
     output = ctx.method_return
 
+    if isinstance(size, int):
+        size = (size, )
+
     # check const
     is_const = True
     for s in size:
