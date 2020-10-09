@@ -16,7 +16,7 @@ Below are some usage examples, for more check out the [notebooks](notebooks).
 
 ```python
 # torch2trt should be imported before torch
-from torch2trt import torch2trt
+from torch2trt_dynamic import torch2trt_dynamic
 import torch
 from torch import nn
 from torchvision.models.resnet import resnet50
@@ -35,7 +35,7 @@ opt_shape_param = [
         [1, 3, 512, 512]    # max
     ]
 ]
-model_trt = torch2trt(model, [x], fp16_mode=False, opt_shape_param=opt_shape_param)
+model_trt = torch2trt_dynamic(model, [x], fp16_mode=False, opt_shape_param=opt_shape_param)
 ```
 
 ### Execute
@@ -63,7 +63,7 @@ torch.save(model_trt.state_dict(), 'alexnet_trt.pth')
 We can load the saved model into a ``TRTModule``
 
 ```python
-from torch2trt import TRTModule
+from torch2trt_dynamic import TRTModule
 
 model_trt = TRTModule()
 
@@ -77,9 +77,9 @@ model_trt.load_state_dict(torch.load('alexnet_trt.pth'))
 To install without compiling plugins, call the following
 
 ```bash
-git clone https://github.com/grimoire/torch2trt_dynamic.git torch2trt
-cd torch2trt
-sudo python setup.py install
+git clone https://github.com/grimoire/torch2trt_dynamic.git torch2trt_dynamic
+cd torch2trt_dynamic
+python setup.py develop
 ```
 
 ### Set plugins(optional)
@@ -97,7 +97,7 @@ python API.
 
 ```python
 import tensorrt as trt
-from torch2trt import tensorrt_converter
+from torch2trt_dynamic import tensorrt_converter
 
 @tensorrt_converter('torch.nn.ReLU.forward')
 def convert_ReLU(ctx):
@@ -116,6 +116,6 @@ the following
 * ``ctx.method_kwargs`` - Keyword arguments that were passed to the specified PyTorch function.
 * ``ctx.method_return`` - The value returned by the specified PyTorch function.  The converter must set the ``_trt`` attribute where relevant.
 
-Please see [this folder](torch2trt/converters) for more examples.
+Please see [this folder](torch2trt_dynamic/converters) for more examples.
 
 

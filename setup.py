@@ -40,7 +40,7 @@ def run_plugins_compilation(cmd_obj):
 
         print('Building in plugin support')
         build(**build_args)
-        package_data['torch2trt'] = ['libtorch2trt.so']
+        package_data['torch2trt_dynamic'] = ['libtorch2trt_dynamic.so']
 
 
 class DevelopCommand(develop):
@@ -114,9 +114,9 @@ class CleanCommand(Command):
 
 
 setup(
-    name='torch2trt',
+    name='torch2trt_dynamic',
     version='0.2.0',
-    description='An easy to use PyTorch to TensorRT converter',
+    description='An easy to use PyTorch to TensorRT converter with dynamic shape support',
     cmdclass={
         'install': InstallCommand,
         'clean': CleanCommand,

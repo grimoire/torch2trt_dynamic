@@ -7,7 +7,7 @@ PLUGINS = [
     'interpolate',
 ]
 
-BASE_FOLDER = 'torch2trt/converters'
+BASE_FOLDER = 'torch2trt_dynamic/converters'
 
 NINJA_TEMPLATE = Template((
     "rule link\n"
@@ -50,7 +50,7 @@ def build(cuda_dir="/usr/local/cuda",
         plugin_o_files += [plugin + '.pb.o', plugin + '.o']
 
     NINJA_STR += Template((
-        "build torch2trt/libtorch2trt.so: link $o_files\n"
+        "build torch2trt_dynamic/libtorch2trt_dynamic.so: link $o_files\n"
     )).substitute({'o_files': ' '.join(plugin_o_files)})
 
     with open('build.ninja', 'w') as f:

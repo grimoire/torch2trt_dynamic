@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: torch2trt-dynamic
+Version: 0.2.0
+Summary: An easy to use PyTorch to TensorRT converter with dynamic shape support
+Home-page: UNKNOWN
+Author: UNKNOWN
+Author-email: UNKNOWN
+License: UNKNOWN
+Description: UNKNOWN
+Platform: UNKNOWN
