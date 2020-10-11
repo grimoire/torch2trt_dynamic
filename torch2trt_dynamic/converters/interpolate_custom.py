@@ -76,7 +76,7 @@ def convert_interpolate(ctx):
         layer.resize_mode = trt.ResizeMode.LINEAR
     else:
         layer.resize_mode = trt.ResizeMode.LINEAR
-        print("unknown interpolate type, use linear insteed.")
+        print("unknown interpolate type, use linear instead.")
 
     output._trt = layer.get_output(0)
 

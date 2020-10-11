@@ -5,6 +5,7 @@ tags
 *.o
 *.pb.o
 torch2trt.egg-info
+torch2trt_dynamic.egg-info
 build/
 dist/
 __pycache__/
