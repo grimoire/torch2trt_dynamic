@@ -85,6 +85,7 @@ from .zeros import convert_zeros
 from .ones import convert_ones
 from .t import convert_t
 from .linear import convert_linear
+from .full import convert_full
 
 try:
     # custom plugin support
