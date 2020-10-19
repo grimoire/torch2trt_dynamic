@@ -86,6 +86,8 @@ from .ones import convert_ones
 from .t import convert_t
 from .linear import convert_linear
 from .full import convert_full
+from .reciprocal import convert_reciprocal
+from .take import convert_take
 
 try:
     # custom plugin support
