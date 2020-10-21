@@ -88,6 +88,7 @@ from .linear import convert_linear
 from .full import convert_full
 from .reciprocal import convert_reciprocal
 from .take import convert_take
+from .where import convert_where, convert_Tensor_where
 
 try:
     # custom plugin support
