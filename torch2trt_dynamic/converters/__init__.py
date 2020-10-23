@@ -89,7 +89,7 @@ from .full import convert_full
 from .reciprocal import convert_reciprocal
 from .take import convert_take
 from .where import convert_where, convert_Tensor_where
-from .leaky_relu import convert_leaky_relu
+# from .leaky_relu import convert_leaky_relu
 
 try:
     # custom plugin support
