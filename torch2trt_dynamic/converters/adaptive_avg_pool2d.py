@@ -12,17 +12,27 @@ def convert_adaptive_avg_pool2d(ctx):
 
     if isinstance(output_size, int):
         output_size = (output_size, output_size)
-    
+
     output_size = tuple([-1 if not o else o for o in output_size])
 
-    plugin = create_adaptivepool_plugin("adaptive_avg_pool2d_"+str(id(input)),
-                                        output_size=output_size,
-                                        pooling_type=trt.PoolingType.AVERAGE)
-            
-    layer = ctx.network.add_plugin_v2(
-        inputs=[input_trt], plugin=plugin)
+    if output_size[0] == 1 and output_size[1] == 1:
+        # use reduce as max pool2d
+        shape_length = len(input.shape)
+        axes = (1 << (shape_length - 1)) + (1 << (shape_length - 2))
+        keepdim = True
+        layer = ctx.network.add_reduce(input_trt, trt.ReduceOperation.AVERAGE,
+                                       axes, keepdim)
+        output._trt = layer.get_output(0)
+    else:
+        plugin = create_adaptivepool_plugin(
+            "adaptive_avg_pool2d_" + str(id(input)),
+            output_size=output_size,
+            pooling_type=trt.PoolingType.AVERAGE)
 
-    output._trt = layer.get_output(0)
+        layer = ctx.network.add_plugin_v2(inputs=[input_trt], plugin=plugin)
+
+        output._trt = layer.get_output(0)
+
 
 ### old
 # @tensorrt_converter('torch.nn.functional.adaptive_avg_pool2d')
