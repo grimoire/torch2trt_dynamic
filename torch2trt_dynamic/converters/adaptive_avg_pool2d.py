@@ -20,7 +20,7 @@ def convert_adaptive_avg_pool2d(ctx):
         shape_length = len(input.shape)
         axes = (1 << (shape_length - 1)) + (1 << (shape_length - 2))
         keepdim = True
-        layer = ctx.network.add_reduce(input_trt, trt.ReduceOperation.AVERAGE,
+        layer = ctx.network.add_reduce(input_trt, trt.ReduceOperation.AVG,
                                        axes, keepdim)
         output._trt = layer.get_output(0)
     else:
