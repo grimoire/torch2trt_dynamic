@@ -49,7 +49,7 @@ def convert_shapewarper_numel(ctx):
     
     num = ctx.method_return
     
-    num_trt = shape[i]._trt
+    num_trt = shape[0]._trt
     for i in range(1, len(shape)):
         other_trt = shape[i]._trt
         num_trt = ctx.network.add_elementwise(num_trt, other_trt, trt.ElementWiseOperation.PROD).get_output(0)
