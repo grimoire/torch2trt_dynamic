@@ -115,7 +115,7 @@ class CleanCommand(Command):
 
 setup(
     name='torch2trt_dynamic',
-    version='0.2.0',
+    version='0.3.0',
     description='An easy to use PyTorch to TensorRT converter with dynamic shape support',
     cmdclass={
         'install': InstallCommand,
