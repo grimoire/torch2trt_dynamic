@@ -13,3 +13,4 @@ from .create_dcn_plugin import create_dcn_plugin
 from .create_nms_plugin import create_nms_plugin
 from .create_roiextractor_plugin import create_roiextractor_plugin
 from .create_roipool_plugin import create_roipool_plugin
+from .create_torchembedding_plugin import create_torchembedding_plugin
