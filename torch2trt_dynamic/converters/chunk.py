@@ -13,6 +13,8 @@ def convert_chunk(ctx):
     input_trt = trt_(ctx.network, input)
     chunks = get_arg(ctx, 'chunks', 1, 0)
     dim = get_arg(ctx, 'dim', 2, 0)
+    if dim<0:
+        dim = input.dim()+dim
     outputs = ctx.method_return
 
     if len(outputs)!=chunks:

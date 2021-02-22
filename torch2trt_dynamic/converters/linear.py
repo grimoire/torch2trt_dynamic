@@ -3,7 +3,7 @@ from ..module_test import add_module_test
 import torch
 from .t import convert_t
 from .matmul import convert_matmul
-from .sum import convert_sum
+from .add import convert_add
 
 
 @tensorrt_converter('torch.nn.functional.linear')
@@ -35,7 +35,7 @@ def convert_linear(ctx):
         add_bias_output = matmul_output + bias
         ctx.method_args = [matmul_output, bias]
         ctx.method_return = add_bias_output
-        convert_sum(ctx)
+        convert_add(ctx)
         output._trt = add_bias_output._trt
     else:
         output._trt = matmul_output._trt

@@ -3,6 +3,7 @@ from torch2trt_dynamic.module_test import add_module_test
 
 
 @tensorrt_converter('torch.transpose')
+@tensorrt_converter('torch.Tensor.transpose')
 def convert_transpose(ctx):
     input = ctx.method_args[0]
     input_trt = trt_(ctx.network, input)
