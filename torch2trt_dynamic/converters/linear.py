@@ -1,9 +1,6 @@
 from ..torch2trt_dynamic import *
 from ..module_test import add_module_test
-import torch
-from .t import convert_t
-from .matmul import convert_matmul
-from .add import convert_add
+from .Linear import convert_Linear
 
 
 @tensorrt_converter('torch.nn.functional.linear')
@@ -16,30 +13,16 @@ def convert_linear(ctx):
     bias = get_arg(ctx, 'bias', pos=2, default=None)
     output = ctx.method_return
 
-    # transpose weight
-    weight_transpose = weight.t()
-    ctx.method_args = [weight]
-    ctx.method_kwargs = {}
-    ctx.method_return = weight_transpose
-    convert_t(ctx)
-
-    # matmul
-    matmul_output = input.matmul(weight_transpose)
-    ctx.method_args = [input, weight]
-    ctx.method_kwargs = {}
-    ctx.method_return = matmul_output
-    convert_matmul(ctx)
-
-    # add bias
+    in_channels = weight.shape[1]
+    out_channels = weight.shape[0]
+    module = torch.nn.Linear(in_channels, out_channels, bias is not None)
+    module.weight = torch.nn.Parameter(weight)
     if bias is not None:
-        add_bias_output = matmul_output + bias
-        ctx.method_args = [matmul_output, bias]
-        ctx.method_return = add_bias_output
-        convert_add(ctx)
-        output._trt = add_bias_output._trt
-    else:
-        output._trt = matmul_output._trt
+        module.bias = torch.nn.Parameter(bias)
 
+    ctx.method_args = [module, input]
+    ctx.method_kwargs = {}
+    convert_Linear(ctx)
 
     ctx.method_args = old_method_args
     ctx.method_kwargs = old_method_kwargs
