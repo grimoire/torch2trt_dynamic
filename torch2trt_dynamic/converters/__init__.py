@@ -115,5 +115,6 @@ try:
     from .roi_align import convert_roi_align, convert_RoiAlign
     from .roi_pool import convert_roi_pool, convert_RoIPool
     from .Embedding import convert_embedding, convert_embedding_forward
+    from .bmm import convert_bmm
 except:
     print("plugin not found.")
