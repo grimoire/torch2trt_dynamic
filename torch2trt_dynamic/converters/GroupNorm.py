@@ -8,26 +8,22 @@ def convert_GroupNorm(ctx):
     input = ctx.method_args[1]
 
     input_trt = trt_(ctx.network, input)
+    weight_trt = trt_(ctx.network, module.weight)
+    bias_trt = trt_(ctx.network, module.bias)
     output = ctx.method_return
 
-    num_channels = module.num_channels
     num_groups = module.num_groups
-    weight = module.weight.detach().cpu().numpy()
-    bias = module.bias.detach().cpu().numpy()
     eps = module.eps
 
     plugin = create_groupnorm_plugin("groupnorm_" + str(id(module)),
                                      num_groups=num_groups,
-                                     num_channels=num_channels,
-                                     W=weight,
-                                     B=bias,
-                                     eps=eps
-                                     )
+                                     eps=eps)
 
     custom_layer = ctx.network.add_plugin_v2(
-        inputs=[input_trt], plugin=plugin)
+        inputs=[input_trt, weight_trt, bias_trt], plugin=plugin)
 
     output._trt = custom_layer.get_output(0)
+
 
 # @tensorrt_converter('torch.nn.GroupNorm.forward')
 # def convert_GroupNorm(ctx):
@@ -47,7 +43,7 @@ def convert_GroupNorm(ctx):
 #     input_batch_trt = ctx.network.add_slice(input_shape_trt, [0], [1], [1]).get_output(0)
 #     input_channel_trt = ctx.network.add_slice(input_shape_trt, [1], [1], [1]).get_output(0)
 #     input_hw_trt = ctx.network.add_slice(input_shape_trt, [2], [2], [1]).get_output(0)
-    
+
 #     group_length = num_channels//num_groups
 #     num_groups_trt = trt_(ctx.network, torch.tensor([num_groups],dtype=torch.int32).to(input.device))
 #     group_length_trt = trt_(ctx.network, torch.tensor([group_length],dtype=torch.int32).to(input.device))
@@ -71,7 +67,7 @@ def convert_GroupNorm(ctx):
 
 #     # compute sqrt(var + eps)
 #     var_trt = ctx.network.add_scale(var_trt, trt.ScaleMode.UNIFORM, eps_np, np.ones_like(eps_np), 0.5 * np.ones_like(eps_np)).get_output(0)
-        
+
 #     # compute final result
 #     norm_input_trt = ctx.network.add_elementwise(delta_trt, var_trt, trt.ElementWiseOperation.DIV).get_output(0)
 #     layer = ctx.network.add_shuffle(norm_input_trt)
