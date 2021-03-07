@@ -11,6 +11,11 @@ def convert_masked_fill(ctx):
     value = get_arg(ctx, 'value', pos=2, default=0)
     output = ctx.method_return
 
+    if value == float('-inf'):
+        import sys
+        float_info = sys.float_info
+        value = -(float_info.min*float_info.epsilon)
+
     float_mask = mask.type_as(input)
     result = input*(1-float_mask)+value*float_mask
 
