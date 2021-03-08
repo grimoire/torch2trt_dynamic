@@ -30,8 +30,4 @@ def create_torchembedding_plugin(layer_name, weight):
         trt.PluginFieldType.INT32)
     pfc.append(pf_embedding_dim)
 
-    pf_weight = trt.PluginField("weight", np.array(weight, dtype=np.float32),
-                                trt.PluginFieldType.FLOAT32)
-    pfc.append(pf_weight)
-
     return creator.create_plugin(layer_name, pfc)
