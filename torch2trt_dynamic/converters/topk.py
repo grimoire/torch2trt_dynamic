@@ -15,6 +15,12 @@ def convert_topk(ctx):
         axis = len(input.shape) - 1
     if axis < 0:
         axis = len(input.shape) + axis
+
+    if k > 3840:
+        print("warning: topk = " + k +
+              " > 3840 is not allowed in TensorRT, use 3840 instead.")
+        k = 3840
+
     largest = get_arg(ctx, 'largest', pos=3, default=True)
     topkOp = trt.TopKOperation.MAX if largest else trt.TopKOperation.MIN
 
