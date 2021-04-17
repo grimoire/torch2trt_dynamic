@@ -91,6 +91,7 @@ from .take import convert_take
 from .where import convert_where, convert_Tensor_where
 from .numel import convert_numel
 from .max_pool1d import convert_max_pool1d
+from .GRU import convert_GRU
 
 try:
     # custom plugin support

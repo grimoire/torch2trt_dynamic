@@ -267,6 +267,21 @@ def trt_cast(network, val_trt, data_type):
     return val_trt
 
 
+def convert_with_args(ctx, convert_func, args, kw_args, returns):
+    old_args= ctx.method_args
+    old_kwargs = ctx.method_kwargs
+    old_return = ctx.method_return
+
+    ctx.method_args = args
+    ctx.method_kwargs = kw_args
+    ctx.method_return = returns
+    convert_func(ctx)
+
+    ctx.method_args = old_args
+    ctx.method_kwargs = old_kwargs
+    ctx.method_return = old_return
+
+
 # CONVERSION REGISTRY AND HOOKS
 
 CONVERTERS = {}
