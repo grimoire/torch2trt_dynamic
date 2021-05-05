@@ -6,13 +6,17 @@ def get_tensor_shape(self):
 
 
 old_get_attribute = torch.Tensor.__getattribute__
+
+
 def new_getattribute__(self, name):
-    if name is 'shape':
+    if name == 'shape':
         return get_tensor_shape(self)
     else:
         return old_get_attribute(self, name)
 
+
 class ShapeConverter:
+
     def __init__(self):
         pass
 

@@ -1,9 +1,9 @@
+import numpy as np
 import tensorrt as trt
 import torch
-from copy import copy
-import numpy as np
-import time
-from .calibration import TensorBatchDataset, DatasetCalibrator, DEFAULT_CALIBRATION_ALGORITHM
+
+from .calibration import (DEFAULT_CALIBRATION_ALGORITHM, DatasetCalibrator,
+                          TensorBatchDataset)
 from .shape_converter import ShapeConverter
 
 # UTILITY FUNCTIONS
@@ -128,7 +128,10 @@ def check_torch_dtype(*tensors):
 
 
 def trt_(network, *tensors):
-    """Creates missing TensorRT tensors and adds shuffle layers to make tensors broadcastable"""
+    """
+    Creates missing TensorRT tensors and adds shuffle layers to make tensors
+    broadcastable
+    """
     trt_tensors = [None] * len(tensors)
 
     dtype = check_torch_dtype(*tensors)
@@ -268,7 +271,7 @@ def trt_cast(network, val_trt, data_type):
 
 
 def convert_with_args(ctx, convert_func, args, kw_args, returns):
-    old_args= ctx.method_args
+    old_args = ctx.method_args
     old_kwargs = ctx.method_kwargs
     old_return = ctx.method_return
 
@@ -335,6 +338,7 @@ def attach_converter(ctx, method, converter, method_str):
 
 class ConversionHook(object):
     """Attaches TensorRT converter to PyTorch method call"""
+
     def __init__(self, ctx, method, converter):
         self.ctx = ctx
         self.method_str = method
@@ -348,7 +352,7 @@ class ConversionHook(object):
             module_name = self.method_str.split('.')[0]
             try:
                 exec('import ' + module_name, globals())
-            except:
+            except Exception:
                 print("module {} not found.".format(module_name))
         try:
             self.method_impl = eval(self.method_str)
@@ -366,6 +370,7 @@ class ConversionHook(object):
 
 
 class ConversionContext(object):
+
     def __init__(self, network, converters=CONVERTERS):
         self.network = network
         self.lock = False
@@ -429,6 +434,7 @@ class ConversionContext(object):
 
 
 class TRTModule(torch.nn.Module):
+
     def __init__(self, engine=None, input_names=None, output_names=None):
         super(TRTModule, self).__init__()
         self._register_state_dict_hook(TRTModule._on_state_dict)
@@ -456,7 +462,6 @@ class TRTModule(torch.nn.Module):
         self.output_names = state_dict[prefix + 'output_names']
 
     def forward(self, *inputs):
-        batch_size = inputs[0].shape[0]
         bindings = [None] * (len(self.input_names) + len(self.output_names))
 
         for i, input_name in enumerate(self.input_names):
@@ -591,6 +596,7 @@ def torch2trt_dynamic(module,
 
 
 def tensorrt_converter(method, is_real=True):
+
     def register_converter(converter):
         CONVERTERS[method] = {'converter': converter, 'is_real': is_real}
         return converter
