@@ -1,12 +1,4 @@
 import numpy as np
-
-import os
-import os.path as osp
-# dir_path = os.path.dirname(os.path.realpath(__file__))
-from .globals import dir_path
-import ctypes
-ctypes.CDLL(osp.join(dir_path, "libamirstan_plugin.so"))
-
 import tensorrt as trt
 
 
