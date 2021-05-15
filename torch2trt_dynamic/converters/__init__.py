@@ -94,6 +94,7 @@ from .view_as import *
 from .where import convert_Tensor_where, convert_where
 from .zeros import convert_zeros
 from .zeros_like import convert_zeros_like
+from .gelu import convert_gelu
 
 try:
     # custom plugin support

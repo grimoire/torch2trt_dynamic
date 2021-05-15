@@ -1,5 +1,7 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
+import torch
+
 from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.transpose')
@@ -10,9 +12,12 @@ def convert_transpose(ctx):
     output = ctx.method_return
     # permutation -1 because TRT does not include batch dim
 
-    permutation = list(range(len(input.shape)))
+    dim = input.dim()
+    permutation = list(range(dim))
     dim0 = ctx.method_args[1]
     dim1 = ctx.method_args[2]
+    dim0 = dim0 if dim0 >= 0 else dim + dim0
+    dim1 = dim1 if dim1 >= 0 else dim + dim1
     permutation[dim0] = dim1
     permutation[dim1] = dim0
     layer = ctx.network.add_shuffle(input_trt)
@@ -21,10 +26,12 @@ def convert_transpose(ctx):
 
 
 class Transpose(torch.nn.Module):
+
     def __init__(self, dim0, dim1):
         super(Transpose, self).__init__()
         self.dim0 = dim0
         self.dim1 = dim1
+
     def forward(self, x):
         return torch.transpose(x, self.dim0, self.dim1).contiguous()
 

@@ -1,3 +1,4 @@
+import torch  # noqa: F401,F403
 from ..torch2trt_dynamic import tensorrt_converter
 
 
