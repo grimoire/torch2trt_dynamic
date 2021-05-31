@@ -1,6 +1,8 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
-from torch2trt_dynamic.module_test import add_module_test
+import tensorrt as trt
+
 from torch2trt_dynamic.plugins import create_adaptivepool_plugin
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 trt_)
 
 
 @tensorrt_converter('torch.nn.functional.adaptive_avg_pool2d')
@@ -32,10 +34,3 @@ def convert_adaptive_avg_pool2d(ctx):
         layer = ctx.network.add_plugin_v2(inputs=[input_trt], plugin=plugin)
 
         output._trt = layer.get_output(0)
-
-
-### old
-# @tensorrt_converter('torch.nn.functional.adaptive_avg_pool2d')
-# def convert_adaptive_avg_pool2d(ctx):
-#     ctx.method_args = (torch.nn.AdaptiveAvgPool2d(ctx.method_args[1]), ctx.method_args[0])
-#     convert_AdaptiveAvgPool2d(ctx)

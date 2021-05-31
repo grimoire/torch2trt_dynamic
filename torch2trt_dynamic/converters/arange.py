@@ -1,8 +1,14 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
+import tensorrt as trt
+import torch
+
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 trt_, trt_cast,
+                                                 torch_dtype_to_trt)
+
 
 @tensorrt_converter('torch.arange')
 def convert_arange(ctx):
-    if len(ctx.method_args)==1:
+    if len(ctx.method_args) == 1:
         start = 0
         end = ctx.method_args[0]
         kwargs = ctx.method_kwargs
@@ -13,35 +19,37 @@ def convert_arange(ctx):
         end = get_arg(ctx, 'end', pos=1, default=1)
         step = get_arg(ctx, 'step', pos=2, default=2)
         dtype = get_arg(ctx, 'dtype', pos=4, default=None)
-    
+
     output = ctx.method_return
     dtype = output.dtype
-    if dtype==torch.int64:
+    if dtype == torch.int64:
         dtype = torch.int32
 
     # cast float to int if necessory
-    if not hasattr(start, '_trt') and start%1==0:
+    if not hasattr(start, '_trt') and start % 1 == 0:
         start = int(start)
 
-    if not hasattr(end, '_trt') and end%1==0:
+    if not hasattr(end, '_trt') and end % 1 == 0:
         end = int(end)
 
-    if not hasattr(step, '_trt') and step%1==0:
+    if not hasattr(step, '_trt') and step % 1 == 0:
         step = int(step)
 
     # check const
     is_const = True
-    is_const = False if hasattr(start, '_trt') or hasattr(end, '_trt') or hasattr(step, '_trt') else is_const
-    if not isinstance(start, int) or not isinstance(end, int) or not isinstance(step, int):
+    is_const = False if hasattr(start, '_trt') or hasattr(
+        end, '_trt') or hasattr(step, '_trt') else is_const
+    if not isinstance(start, int) or not isinstance(
+            end, int) or not isinstance(step, int):
         is_const = True
-        print("warning: dynamic arange with start:{} end:{} step:{}, use constant instead.".format(type(start), type(end), type(step)))
-
+        print("warning: dynamic arange with start:{} end:{} step:{}".format(
+            type(start), type(end), type(step)) + ", use constant instead.")
     if is_const:
         # create const value
         output_trt = trt_(ctx.network, output)
-    
+
     else:
-        ## create fill
+        # create fill
 
         # compute shape
         start_trt = trt_(ctx.network, start)
@@ -49,17 +57,16 @@ def convert_arange(ctx):
         step_trt = trt_(ctx.network, step)
         one_trt = trt_(ctx.network, torch.tensor([1], dtype=torch.int32))
 
-        # # to float
-        # one_trt = trt_(ctx.network, torch.tensor([1], dtype=torch.float32))
-        # start_trt = trt_cast(ctx.network, start_trt, trt.DataType.FLOAT)
-        # end_trt = trt_cast(ctx.network, end_trt, trt.DataType.FLOAT)
-        # step_trt = trt_cast(ctx.network, step_trt, trt.DataType.FLOAT)
-        
         # length = (end - start + step - 1) // step
-        length_trt = ctx.network.add_elementwise(end_trt, start_trt, trt.ElementWiseOperation.SUB).get_output(0)
-        length_trt = ctx.network.add_elementwise(length_trt, step_trt, trt.ElementWiseOperation.SUM).get_output(0)
-        length_trt = ctx.network.add_elementwise(length_trt, one_trt, trt.ElementWiseOperation.SUB).get_output(0)
-        length_trt = ctx.network.add_elementwise(length_trt, step_trt, trt.ElementWiseOperation.FLOOR_DIV).get_output(0)
+        length_trt = ctx.network.add_elementwise(
+            end_trt, start_trt, trt.ElementWiseOperation.SUB).get_output(0)
+        length_trt = ctx.network.add_elementwise(
+            length_trt, step_trt, trt.ElementWiseOperation.SUM).get_output(0)
+        length_trt = ctx.network.add_elementwise(
+            length_trt, one_trt, trt.ElementWiseOperation.SUB).get_output(0)
+        length_trt = ctx.network.add_elementwise(
+            length_trt, step_trt,
+            trt.ElementWiseOperation.FLOOR_DIV).get_output(0)
 
         # length to int
         length_trt = trt_cast(ctx.network, length_trt, trt.DataType.INT32)

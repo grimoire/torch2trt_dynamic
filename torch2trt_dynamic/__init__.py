@@ -1,11 +1,12 @@
-from .torch2trt_dynamic import *
-from .converters import *
 import tensorrt as trt
+
+from .converters import *  # noqa: F401,F403
+from .torch2trt_dynamic import *  # noqa: F401,F403
 
 
 def load_plugins():
-    import os
     import ctypes
+    import os
     ctypes.CDLL(
         os.path.join(os.path.dirname(__file__), 'libtorch2trt_dynamic.so'))
 

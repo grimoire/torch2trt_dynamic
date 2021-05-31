@@ -1,19 +1,23 @@
 # dummy converters throw warnings method encountered
 
 try:
-    from .dummy_converters import *
+    from .dummy_converters import *  # noqa: F401,F403
 except Exception:
     print("dummy converters not found.")
 
 # supported converters will override dummy converters
 
-from .activation import *
-from .add import *
-from .addcmul import *
+from .activation import (convert_elu, convert_leaky_relu, convert_selu,
+                         convert_softplus, convert_softsign, test_elu,
+                         test_leaky_relu, test_selu, test_softplus,
+                         test_softsign)
+from .add import (convert_add, test_add_basic, test_add_iadd,
+                  test_add_radd_float, test_add_radd_int, test_add_torchadd)
+from .addcmul import convert_addcmul, test_addcmul
 from .arange import convert_arange
-from .argmax import *
-from .argmin import *
-from .avg_pool2d import *
+from .argmax import convert_argmax
+from .argmin import convert_argmin
+from .avg_pool2d import convert_avg_pool2d
 from .BatchNorm1d import *
 from .BatchNorm2d import *
 from .cast_type import *
@@ -31,6 +35,7 @@ from .flatten import *
 from .floor_divide import convert_floor_div, convert_rfloor_div
 from .full import convert_full
 from .full_like import convert_full_like
+from .gelu import convert_gelu
 from .getitem import *
 from .GRU import convert_GRU
 from .identity import *
@@ -94,11 +99,33 @@ from .view_as import *
 from .where import convert_Tensor_where, convert_where
 from .zeros import convert_zeros
 from .zeros_like import convert_zeros_like
-from .gelu import convert_gelu
+
+__all__ = []
+# activation
+__all__ += [
+    'convert_leaky_relu', 'test_leaky_relu', 'convert_elu', 'test_elu',
+    'convert_selu', 'test_selu', 'convert_softsign', 'test_softsign',
+    'convert_softplus', 'test_softplus'
+]
+# add
+__all__ += [
+    'convert_add', 'test_add_basic', 'test_add_iadd', 'test_add_radd_float',
+    'test_add_radd_int', 'test_add_torchadd'
+]
+# addcmul
+__all__ += ['convert_addcmul', 'test_addcmul']
+# arange
+__all__ += ['convert_arange']
+# argmax
+__all__ += ['convert_argmax']
+# argmin
+__all__ += ['convert_argmin']
+# avg_pool2d
+__all__ += ['convert_avg_pool2d']
 
 try:
     # custom plugin support
-    from .adaptive_avg_pool2d import *
+    from .adaptive_avg_pool2d import convert_adaptive_avg_pool2d
     from .adaptive_max_pool2d import *
     from .AdaptiveAvgPool2d import *
     from .AdaptiveMaxPool2d import *
