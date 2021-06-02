@@ -1,10 +1,11 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import *
+
 from .size import IntWarper
 
 
 def __add_clamp(network, trt_input, val, op):
-    
+
     # create TensorRT constant for minimum value
     val_shape = (1, ) * len(trt_input.shape)  # broadcast all dimensions
     if isinstance(val, IntWarper):
@@ -16,7 +17,9 @@ def __add_clamp(network, trt_input, val, op):
         val_trt = layer.get_output(0)
 
         # convert 2 / to prevent warning, might remove in future version
-        layer = network.add_elementwise(val_trt, trt_(network, torch.zeros((1,), dtype=torch.float32)), trt.ElementWiseOperation.SUM)
+        layer = network.add_elementwise(
+            val_trt, trt_(network, torch.zeros((1, ), dtype=torch.float32)),
+            trt.ElementWiseOperation.SUM)
         layer.set_output_type(0, trt_input.dtype)
         val_trt = layer.get_output(0)
 
@@ -26,17 +29,19 @@ def __add_clamp(network, trt_input, val, op):
         val_trt = layer.get_output(0)
     else:
         # val_shape = (1, ) * len(trt_input.shape)  # broadcast all dimensions
-        val_tensor = val * torch.ones(val_shape, dtype=torch_dtype_from_trt(trt_input.dtype)).cpu().numpy()
+        val_tensor = val * torch.ones(val_shape,
+                                      dtype=torch_dtype_from_trt(
+                                          trt_input.dtype)).cpu().numpy()
         layer = network.add_constant(val_shape, val_tensor)
         val_trt = layer.get_output(0)
     layer = network.add_elementwise(trt_input, val_trt, op)
-    
+
     return layer
 
-    
+
 # CLAMP_MIN
 
-    
+
 @tensorrt_converter('torch.clamp_min')
 @tensorrt_converter('torch.Tensor.clamp_min')
 def convert_clamp_min(ctx):
@@ -45,12 +50,13 @@ def convert_clamp_min(ctx):
     val = get_arg(ctx, 'min', pos=1, default=0)
     # val = ctx.method_args[1]
     output = ctx.method_return
-    
-    layer = __add_clamp(ctx.network, input_trt, val, trt.ElementWiseOperation.MAX)
-    
+
+    layer = __add_clamp(ctx.network, input_trt, val,
+                        trt.ElementWiseOperation.MAX)
+
     output._trt = layer.get_output(0)
 
-    
+
 class TorchClampMin(torch.nn.Module):
     def forward(self, x):
         return torch.clamp_min(x, -0.1)
@@ -70,7 +76,7 @@ class TensorClampMin(torch.nn.Module):
 def test_tensor_clamp_min():
     return TensorClampMin()
 
-    
+
 # CLAMP_MAX
 
 
@@ -81,11 +87,12 @@ def convert_clamp_max(ctx):
     input_trt = trt_(ctx.network, input)
     val = get_arg(ctx, 'max', pos=1, default=0)
     output = ctx.method_return
-    
-    layer = __add_clamp(ctx.network, input_trt, val, trt.ElementWiseOperation.MIN)
-    
+
+    layer = __add_clamp(ctx.network, input_trt, val,
+                        trt.ElementWiseOperation.MIN)
+
     output._trt = layer.get_output(0)
-    
+
 
 class TorchClampMax(torch.nn.Module):
     def forward(self, x):
@@ -109,7 +116,7 @@ def test_tensor_clamp_max():
 
 # CLAMP
 
-    
+
 @tensorrt_converter('torch.clamp')
 @tensorrt_converter('torch.Tensor.clamp')
 def convert_clamp(ctx):
@@ -118,15 +125,17 @@ def convert_clamp(ctx):
     max_val = get_arg(ctx, 'max', pos=2, default=None)
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
-    
+
     if min_val is not None:
-        layer = __add_clamp(ctx.network, input_trt, min_val, trt.ElementWiseOperation.MAX)
+        layer = __add_clamp(ctx.network, input_trt, min_val,
+                            trt.ElementWiseOperation.MAX)
         input_trt = layer.get_output(0)
     if max_val is not None:
-        layer = __add_clamp(ctx.network, input_trt, max_val, trt.ElementWiseOperation.MIN)
-    
+        layer = __add_clamp(ctx.network, input_trt, max_val,
+                            trt.ElementWiseOperation.MIN)
+
     output._trt = layer.get_output(0)
-    
+
 
 class TorchClamp(torch.nn.Module):
     def forward(self, x):

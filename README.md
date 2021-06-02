@@ -1,21 +1,18 @@
 # torch2trt dynamic
 
-This is a branch of https://github.com/NVIDIA-AI-IOT/torch2trt with dynamic input support
+This is a branch of [torch2trt](https://github.com/NVIDIA-AI-IOT/torch2trt) with dynamic input support
 
-Not all layer support dynamic input such torch.split() etc... 
+Not all layers support dynamic input such as `torch.split()` etc...
 
 You can create a custom layer from nvinfer1::IPluginV2DynamicExt to implement it.
 
-Custom plugins library might be public in future.
-
 ## Usage
 
-Below are some usage examples, for more check out the [notebooks](notebooks).
+Below are some usage examples
 
 ### Convert
 
 ```python
-# torch2trt should be imported before torch
 from torch2trt_dynamic import torch2trt_dynamic
 import torch
 from torch import nn
@@ -70,9 +67,7 @@ model_trt = TRTModule()
 model_trt.load_state_dict(torch.load('alexnet_trt.pth'))
 ```
 
-
 ## Setup
-
 
 To install without compiling plugins, call the following
 
@@ -84,16 +79,15 @@ python setup.py develop
 
 ### Set plugins(optional)
 
-Some layer such as GN and repeat need c++ plugins. To enable these layers. Install the plugin project below
+Some layers such as `GN` and `repeat` need c++ plugins. Install the plugin project below
 
-https://github.com/grimoire/amirstan_plugin
+[amirstan_plugin](https://github.com/grimoire/amirstan_plugin)
 
-remember to export the enviroment variable AMIRSTAN_LIBRARY_PATH
+remember to export the environment variable AMIRSTAN_LIBRARY_PATH
 
 ## How to add (or override) a converter
 
-Here we show how to add a converter for the ``ReLU`` module using the TensorRT
-python API.
+Here we show how to add a converter for the ``ReLU`` module using the TensorRT Python API.
 
 ```python
 import tensorrt as trt
@@ -103,7 +97,7 @@ from torch2trt_dynamic import tensorrt_converter
 def convert_ReLU(ctx):
     input = ctx.method_args[1]
     output = ctx.method_return
-    layer = ctx.network.add_activation(input=input._trt, type=trt.ActivationType.RELU)  
+    layer = ctx.network.add_activation(input=input._trt, type=trt.ActivationType.RELU)
     output._trt = layer.get_output(0)
 ```
 
@@ -117,5 +111,3 @@ the following
 * ``ctx.method_return`` - The value returned by the specified PyTorch function.  The converter must set the ``_trt`` attribute where relevant.
 
 Please see [this folder](torch2trt_dynamic/converters) for more examples.
-
-

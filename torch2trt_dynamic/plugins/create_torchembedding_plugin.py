@@ -13,12 +13,12 @@ def create_torchembedding_plugin(layer_name, weight):
     embedding_dim = weight.shape[1]
 
     pf_num_embeddings = trt.PluginField(
-        "num_embeddings", np.array([num_embeddings], dtype=np.int32),
+        'num_embeddings', np.array([num_embeddings], dtype=np.int32),
         trt.PluginFieldType.INT32)
     pfc.append(pf_num_embeddings)
 
     pf_embedding_dim = trt.PluginField(
-        "embedding_dim", np.array([embedding_dim], dtype=np.int32),
+        'embedding_dim', np.array([embedding_dim], dtype=np.int32),
         trt.PluginFieldType.INT32)
     pfc.append(pf_embedding_dim)
 

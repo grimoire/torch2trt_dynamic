@@ -1,5 +1,4 @@
 class ModuleTest(object):
-
     def __init__(self, module_fn, dtype, device, input_shapes,
                  **torch2trt_kwargs):
         self.module_fn = module_fn
@@ -16,7 +15,6 @@ MODULE_TESTS = []
 
 
 def add_module_test(dtype, device, input_shapes, **torch2trt_kwargs):
-
     def register_module_test(module):
         global MODULE_TESTS
         MODULE_TESTS += [

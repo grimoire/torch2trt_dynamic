@@ -27,7 +27,7 @@ def convert_adaptive_avg_pool2d(ctx):
         output._trt = layer.get_output(0)
     else:
         plugin = create_adaptivepool_plugin(
-            "adaptive_avg_pool2d_" + str(id(input)),
+            'adaptive_avg_pool2d_' + str(id(input)),
             output_size=output_size,
             pooling_type=trt.PoolingType.AVERAGE)
 

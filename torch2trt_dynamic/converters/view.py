@@ -1,13 +1,15 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
-from torch2trt_dynamic.module_test import add_module_test
-from .size import IntWarper
 import logging
+
+from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import *
+
+from .size import IntWarper
 
 
 @tensorrt_converter('torch.Tensor.reshape')
 @tensorrt_converter('torch.Tensor.view')
 def convert_view(ctx):
-        
+
     input = ctx.method_args[0]
     size = get_arg(ctx, 'shape', pos=1, default=[])
     if isinstance(size, int):
@@ -24,8 +26,8 @@ def convert_view(ctx):
 
     ## negative shape might cause overflow, forbid for now
     for s in size:
-        if s<0:
-            is_shape_tensor=True
+        if s < 0:
+            is_shape_tensor = True
             break
 
     ## compute shape tensor
@@ -37,7 +39,8 @@ def convert_view(ctx):
             else:
                 # if s<0:
                 #     logging.debug("negative index of view/reshape might cause overflow!")
-                const_shape_trt = trt_(ctx.network, input.new_tensor([s],dtype=torch.int32))
+                const_shape_trt = trt_(
+                    ctx.network, input.new_tensor([s], dtype=torch.int32))
                 shape_trt.append(const_shape_trt)
 
         shape_trt = ctx.network.add_concatenation(shape_trt).get_output(0)
@@ -50,7 +53,6 @@ def convert_view(ctx):
     output._trt = layer.get_output(0)
 
 
-
 class View(torch.nn.Module):
     def __init__(self, *dims):
         super(View, self).__init__()
@@ -58,7 +60,6 @@ class View(torch.nn.Module):
 
     def forward(self, x):
         return x.view(*self.dims)
-
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])

@@ -1,5 +1,5 @@
-from ..torch2trt_dynamic import *
 from ..module_test import add_module_test
+from ..torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.masked_fill', is_real=False)
@@ -14,10 +14,10 @@ def convert_masked_fill(ctx):
     if value == float('-inf'):
         import sys
         float_info = sys.float_info
-        value = -(float_info.min*float_info.epsilon)
+        value = -(float_info.min * float_info.epsilon)
 
     float_mask = mask.type_as(input)
-    result = input*(1-float_mask)+value*float_mask
+    result = input * (1 - float_mask) + value * float_mask
 
     output._trt = result._trt
     ctx.method_return = output

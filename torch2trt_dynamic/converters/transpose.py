@@ -26,7 +26,6 @@ def convert_transpose(ctx):
 
 
 class Transpose(torch.nn.Module):
-
     def __init__(self, dim0, dim1):
         super(Transpose, self).__init__()
         self.dim0 = dim0

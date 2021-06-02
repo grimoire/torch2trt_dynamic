@@ -1,5 +1,5 @@
-from ..torch2trt_dynamic import *
 from ..module_test import add_module_test
+from ..torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.floor_divide')
@@ -12,7 +12,8 @@ def convert_floor_div(ctx):
     input_b = ctx.method_args[1]
     input_a_trt, input_b_trt = trt_(ctx.network, input_a, input_b)
     output = ctx.method_return
-    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, trt.ElementWiseOperation.FLOOR_DIV)
+    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt,
+                                        trt.ElementWiseOperation.FLOOR_DIV)
     output._trt = layer.get_output(0)
 
 
@@ -22,6 +23,6 @@ def convert_rfloor_div(ctx):
     input_b = ctx.method_args[0]
     input_a_trt, input_b_trt = trt_(ctx.network, input_a, input_b)
     output = ctx.method_return
-    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, trt.ElementWiseOperation.FLOOR_DIV)
+    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt,
+                                        trt.ElementWiseOperation.FLOOR_DIV)
     output._trt = layer.get_output(0)
-    

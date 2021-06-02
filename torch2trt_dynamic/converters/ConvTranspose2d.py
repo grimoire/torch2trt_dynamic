@@ -19,22 +19,21 @@ def convert_ConvTranspose2d(ctx):
     padding = module.padding
     if not isinstance(padding, tuple):
         padding = (padding, ) * 2
-        
+
     kernel = module.weight.detach().cpu().numpy()
-    
+
     bias = trt.Weights(torch_dtype_to_trt(module.weight.dtype))
     if module.bias is not None:
         bias = module.bias.detach().cpu().numpy()
 
-    layer = ctx.network.add_deconvolution(
-        input=input_trt,
-        num_output_maps=module.out_channels,
-        kernel_shape=kernel_size,
-        kernel=kernel,
-        bias=bias)
+    layer = ctx.network.add_deconvolution(input=input_trt,
+                                          num_output_maps=module.out_channels,
+                                          kernel_shape=kernel_size,
+                                          kernel=kernel,
+                                          bias=bias)
     layer.stride = stride
     layer.padding = padding
-    
+
     if module.groups is not None:
         layer.num_groups = module.groups
 

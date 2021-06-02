@@ -1,6 +1,6 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
 from torch2trt_dynamic.plugins import create_adaptivepool_plugin
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.nn.functional.adaptive_max_pool2d')
@@ -12,25 +12,27 @@ def convert_adaptive_max_pool2d(ctx):
 
     if isinstance(output_size, int):
         output_size = (output_size, output_size)
-    
+
     output_size = tuple([-1 if not o else o for o in output_size])
 
-    if output_size[0]==1 and output_size[1] == 1:
+    if output_size[0] == 1 and output_size[1] == 1:
         # use reduce as max pool2d
         shape_length = len(input.shape)
-        axes = (1<<(shape_length-1)) + (1<<(shape_length-2))
+        axes = (1 << (shape_length - 1)) + (1 << (shape_length - 2))
         keepdim = True
-        layer = ctx.network.add_reduce(input_trt, trt.ReduceOperation.MAX, axes, keepdim)
+        layer = ctx.network.add_reduce(input_trt, trt.ReduceOperation.MAX,
+                                       axes, keepdim)
         output._trt = layer.get_output(0)
     else:
-        plugin = create_adaptivepool_plugin("adaptive_max_pool2d_"+str(id(input)),
+        plugin = create_adaptivepool_plugin('adaptive_max_pool2d_' +
+                                            str(id(input)),
                                             output_size=output_size,
                                             pooling_type=trt.PoolingType.MAX)
 
-        layer = ctx.network.add_plugin_v2(
-            inputs=[input_trt], plugin=plugin)
+        layer = ctx.network.add_plugin_v2(inputs=[input_trt], plugin=plugin)
 
         output._trt = layer.get_output(0)
+
 
 ### old version
 # @tensorrt_converter('torch.nn.functional.adaptive_max_pool2d')
@@ -59,7 +61,7 @@ def convert_adaptive_max_pool2d(ctx):
 
 #         output._trt = layer.get_output(0)
 
-    
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
 def test_adaptive_max_pool2d_1x1():
     return torch.nn.AdaptiveMaxPool2d((1, 1))

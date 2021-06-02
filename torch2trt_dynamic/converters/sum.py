@@ -1,5 +1,6 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import *
+
 from .unary import UnaryModule
 
 

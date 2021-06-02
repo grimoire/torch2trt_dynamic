@@ -9,12 +9,12 @@ def create_groupnorm_plugin(layer_name, num_groups, eps=1e-5):
 
     pfc = trt.PluginFieldCollection()
 
-    pf_num_groups = trt.PluginField("num_groups",
+    pf_num_groups = trt.PluginField('num_groups',
                                     np.array([num_groups], dtype=np.int32),
                                     trt.PluginFieldType.INT32)
     pfc.append(pf_num_groups)
 
-    pf_eps = trt.PluginField("eps", np.array([eps], dtype=np.float32),
+    pf_eps = trt.PluginField('eps', np.array([eps], dtype=np.float32),
                              trt.PluginFieldType.FLOAT32)
     pfc.append(pf_eps)
 

@@ -1,5 +1,5 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.nn.functional.max_pool2d')
@@ -11,10 +11,10 @@ def convert_max_pool2d(ctx):
     padding = get_arg(ctx, 'padding', pos=3, default=0)
     dilation = get_arg(ctx, 'dilation', pos=4, default=1)
     ceil_mode = get_arg(ctx, 'ceil_mode', pos=5, default=False)
-    
+
     # get input trt tensor (or create constant if it doesn't exist)
     input_trt = trt_(ctx.network, input)
-    
+
     output = ctx.method_return
 
     # get kernel size
@@ -29,25 +29,32 @@ def convert_max_pool2d(ctx):
     if not isinstance(padding, tuple):
         padding = (padding, ) * 2
 
-    layer = ctx.network.add_pooling(
-        input=input_trt, type=trt.PoolingType.MAX, window_size=kernel_size)
-    
+    layer = ctx.network.add_pooling(input=input_trt,
+                                    type=trt.PoolingType.MAX,
+                                    window_size=kernel_size)
+
     layer.stride = stride
     layer.padding = padding
-    
+
     if ceil_mode:
         layer.padding_mode = trt.PaddingMode.EXPLICIT_ROUND_UP
 
     output._trt = layer.get_output(0)
-    
-    
+
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 6)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 5, 7)])
 def test_MaxPool2d_without_ceil_mode():
-    return torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=False)
+    return torch.nn.MaxPool2d(kernel_size=3,
+                              stride=2,
+                              padding=1,
+                              ceil_mode=False)
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 6)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 5, 7)])
 def test_MaxPool2d_with_ceil_mode():
-    return torch.nn.MaxPool2d(kernel_size=3, stride=2, padding=1, ceil_mode=True)
+    return torch.nn.MaxPool2d(kernel_size=3,
+                              stride=2,
+                              padding=1,
+                              ceil_mode=True)

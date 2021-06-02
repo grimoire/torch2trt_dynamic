@@ -1,6 +1,7 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 import tensorrt as trt
+
 from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.topk')
@@ -17,8 +18,8 @@ def convert_topk(ctx):
         axis = len(input.shape) + axis
 
     if k > 3840:
-        print("warning: topk = " + k +
-              " > 3840 is not allowed in TensorRT, use 3840 instead.")
+        print('warning: topk = ' + k +
+              ' > 3840 is not allowed in TensorRT, use 3840 instead.')
         k = 3840
 
     largest = get_arg(ctx, 'largest', pos=3, default=True)

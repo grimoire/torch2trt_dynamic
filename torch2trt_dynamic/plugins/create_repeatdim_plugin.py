@@ -9,12 +9,12 @@ def create_repeat_plugin(layer_name, repeat_shape, type_id=trt.DataType.FLOAT):
 
     pfc = trt.PluginFieldCollection()
 
-    pf_repeat_shape = trt.PluginField("repeat_dims",
+    pf_repeat_shape = trt.PluginField('repeat_dims',
                                       np.array(repeat_shape, dtype=np.int32),
                                       trt.PluginFieldType.INT32)
     pfc.append(pf_repeat_shape)
 
-    pf_type_id = trt.PluginField("type_id", np.array([type_id],
+    pf_type_id = trt.PluginField('type_id', np.array([type_id],
                                                      dtype=np.int32),
                                  trt.PluginFieldType.INT32)
     pfc.append(pf_type_id)

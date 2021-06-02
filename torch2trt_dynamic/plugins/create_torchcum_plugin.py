@@ -9,11 +9,11 @@ def create_torchcum_plugin(layer_name, dim, cum_type):
 
     pfc = trt.PluginFieldCollection()
 
-    pf_dim = trt.PluginField("dim", np.array([dim], dtype=np.int32),
+    pf_dim = trt.PluginField('dim', np.array([dim], dtype=np.int32),
                              trt.PluginFieldType.INT32)
     pfc.append(pf_dim)
 
-    pf_cum_type = trt.PluginField("cum_type",
+    pf_cum_type = trt.PluginField('cum_type',
                                   np.array([cum_type], dtype=np.int32),
                                   trt.PluginFieldType.INT32)
     pfc.append(pf_cum_type)

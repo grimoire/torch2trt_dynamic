@@ -3,7 +3,7 @@
 try:
     from .dummy_converters import *  # noqa: F401,F403
 except Exception:
-    print("dummy converters not found.")
+    print('dummy converters not found.')
 
 # supported converters will override dummy converters
 
@@ -18,11 +18,14 @@ from .arange import convert_arange
 from .argmax import convert_argmax
 from .argmin import convert_argmin
 from .avg_pool2d import convert_avg_pool2d
-from .BatchNorm1d import *
-from .BatchNorm2d import *
-from .cast_type import *
-from .cat import *
-from .chunk import *
+from .BatchNorm1d import convert_BatchNorm1d, test_BatchNorm1d_basic
+from .BatchNorm2d import convert_BatchNorm2d
+from .cast_type import (convert_bool, convert_float, convert_int,
+                        convert_type_as)
+from .cat import convert_cat
+from .chunk import (convert_chunk, test_tensor_chunk_3_2, test_torch_chunk_1_1,
+                    test_torch_chunk_2_1, test_torch_chunk_3_1,
+                    test_torch_chunk_3_2)
 from .clamp import *
 from .Conv1d import *
 from .Conv2d import *
@@ -50,7 +53,6 @@ from .linspace import convert_linspace
 from .logical import *
 from .LogSoftmax import *
 from .masked_fill import *
-# without plugin
 from .matmul import *
 from .max import *
 from .max_pool1d import convert_max_pool1d
@@ -122,6 +124,19 @@ __all__ += ['convert_argmax']
 __all__ += ['convert_argmin']
 # avg_pool2d
 __all__ += ['convert_avg_pool2d']
+# BatchNorm1d
+__all__ += ['convert_BatchNorm1d', 'test_BatchNorm1d_basic']
+# BatchNorm2d
+__all__ += ['convert_BatchNorm2d']
+# cast_type
+__all__ += ['convert_bool', 'convert_float', 'convert_int', 'convert_type_as']
+# cat
+__all__ += ['convert_cat']
+# chunk
+__all__ += [
+    'convert_chunk', 'test_torch_chunk_1_1', 'test_torch_chunk_2_1',
+    'test_torch_chunk_3_1', 'test_torch_chunk_3_2', 'test_tensor_chunk_3_2'
+]
 
 try:
     # custom plugin support
@@ -147,5 +162,5 @@ try:
     from .repeat import *
     from .roi_align import convert_roi_align, convert_RoiAlign
     from .roi_pool import convert_roi_pool, convert_RoIPool
-except:
-    print("plugin not found.")
+except Exception:
+    print('plugin not found.')

@@ -9,13 +9,13 @@ def create_adaptivepool_plugin(layer_name, output_size, pooling_type):
 
     pfc = trt.PluginFieldCollection()
 
-    pf_output_size = trt.PluginField("output_size",
+    pf_output_size = trt.PluginField('output_size',
                                      np.array(output_size, dtype=np.int32),
                                      trt.PluginFieldType.INT32)
     pfc.append(pf_output_size)
 
     pf_pooling_type = trt.PluginField(
-        "pooling_type", np.array([int(pooling_type)], dtype=np.int32),
+        'pooling_type', np.array([int(pooling_type)], dtype=np.int32),
         trt.PluginFieldType.INT32)
     pfc.append(pf_pooling_type)
 

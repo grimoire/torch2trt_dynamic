@@ -9,7 +9,7 @@ def create_torchgather_plugin(layer_name, dim):
 
     pfc = trt.PluginFieldCollection()
 
-    pf_dim = trt.PluginField("dim", np.array([dim], dtype=np.int32),
+    pf_dim = trt.PluginField('dim', np.array([dim], dtype=np.int32),
                              trt.PluginFieldType.INT32)
     pfc.append(pf_dim)
 

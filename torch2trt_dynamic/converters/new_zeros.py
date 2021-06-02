@@ -54,7 +54,7 @@ def convert_new_zeros(ctx):
     elif dtype == torch.bool:
         data_type = trt.DataType.BOOL
     else:
-        print("unsupported convert type:{}".format(dtype))
+        print('unsupported convert type:{}'.format(dtype))
 
     if data_type is not None:
         layer = ctx.network.add_identity(output_trt)

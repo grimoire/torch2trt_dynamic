@@ -2,8 +2,8 @@ import tensorrt as trt
 import torch
 
 from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
-                                                 trt_, trt_cast,
-                                                 torch_dtype_to_trt)
+                                                 torch_dtype_to_trt, trt_,
+                                                 trt_cast)
 
 
 @tensorrt_converter('torch.arange')
@@ -42,8 +42,8 @@ def convert_arange(ctx):
     if not isinstance(start, int) or not isinstance(
             end, int) or not isinstance(step, int):
         is_const = True
-        print("warning: dynamic arange with start:{} end:{} step:{}".format(
-            type(start), type(end), type(step)) + ", use constant instead.")
+        print('warning: dynamic arange with start:{} end:{} step:{}'.format(
+            type(start), type(end), type(step)) + ', use constant instead.')
     if is_const:
         # create const value
         output_trt = trt_(ctx.network, output)

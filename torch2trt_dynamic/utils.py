@@ -31,10 +31,9 @@ def trt_network_to_dot_graph(network):
                     input_j = layer_b.get_input(j)
 
                     if output_i == input_j:
-                        dot.edge(
-                            layer_a.name,
-                            layer_b.name,
-                            label=str(input_j.shape))
+                        dot.edge(layer_a.name,
+                                 layer_b.name,
+                                 label=str(input_j.shape))
 
     # add input->layer edges
     for i in range(network.num_inputs):
@@ -47,8 +46,9 @@ def trt_network_to_dot_graph(network):
                 input_j = layer_b.get_input(j)
 
                 if input_i == input_j:
-                    dot.edge(
-                        input_i.name, layer_b.name, label=str(input_j.shape))
+                    dot.edge(input_i.name,
+                             layer_b.name,
+                             label=str(input_j.shape))
 
     # add layer->output edges
     for i in range(network.num_outputs):
@@ -61,7 +61,8 @@ def trt_network_to_dot_graph(network):
                 input_j = layer_b.get_output(j)
 
                 if input_i == input_j:
-                    dot.edge(
-                        layer_b.name, input_i.name, label=str(input_j.shape))
+                    dot.edge(layer_b.name,
+                             input_i.name,
+                             label=str(input_j.shape))
 
     return dot

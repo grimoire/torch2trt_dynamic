@@ -1,6 +1,7 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
-from torch2trt_dynamic.plugins import *
 import torchvision.ops
+
+from torch2trt_dynamic.plugins import *
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torchvision.ops.nms')
@@ -15,12 +16,10 @@ def convert_nms(ctx):
     boxes_trt = trt_(ctx.network, boxes)
     scores_trt = trt_(ctx.network, scores)
 
+    plugin = create_nms_plugin('nms_' + str(id(boxes)),
+                               iou_threshold=iou_threshold)
 
-    plugin = create_nms_plugin("nms_" + str(id(boxes)),
-                               iou_threshold=iou_threshold
-                               )
+    custom_layer = ctx.network.add_plugin_v2(inputs=[boxes_trt, scores_trt],
+                                             plugin=plugin)
 
-    custom_layer = ctx.network.add_plugin_v2(
-        inputs=[boxes_trt, scores_trt], plugin=plugin)
-    
     output._trt = custom_layer.get_output(0)

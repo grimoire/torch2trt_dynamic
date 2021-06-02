@@ -58,7 +58,6 @@ def convert_addcmul(ctx):
 
 
 class AddcmulTestModule(torch.nn.Module):
-
     def __init__(self, value):
         super(AddcmulTestModule, self).__init__()
         self.value = value

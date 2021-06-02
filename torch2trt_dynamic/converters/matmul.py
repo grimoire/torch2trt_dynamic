@@ -100,7 +100,6 @@ def convert_matmul(ctx):
 
 
 class MatmulTest(torch.nn.Module):
-
     def __init__(self):
         super(MatmulTest, self).__init__()
 

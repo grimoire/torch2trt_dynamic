@@ -16,7 +16,6 @@ def new_getattribute__(self, name):
 
 
 class ShapeConverter:
-
     def __init__(self):
         pass
 

@@ -1,4 +1,5 @@
 from torch2trt_dynamic.torch2trt_dynamic import *
+
 from .cat import *
 from .unsqueeze import *
 
@@ -16,7 +17,7 @@ def convert_stack(ctx):
         ctx.method_return = unsqueeze_input
         convert_unsqueeze(ctx)
         unsqueeze_inputs.append(unsqueeze_input)
-    
+
     ctx.method_args = (unsqueeze_inputs, dim)
     ctx.method_return = output
 
@@ -28,7 +29,7 @@ def convert_stack(ctx):
 #     support_dynamic_shape = False
 #     if hasattr(ctx, "support_dynamic_shape"):
 #         support_dynamic_shape = ctx.support_dynamic_shape
-        
+
 #     inputs = ctx.method_args[0]
 
 #     if 'dim' in ctx.method_kwargs:

@@ -32,46 +32,46 @@ def create_dcn_plugin(layer_name,
 
     pfc = trt.PluginFieldCollection()
 
-    pf_out_channels = trt.PluginField("out_dims",
+    pf_out_channels = trt.PluginField('out_dims',
                                       np.array([out_channels], dtype=np.int32),
                                       trt.PluginFieldType.INT32)
     pfc.append(pf_out_channels)
 
-    pf_kernel_size = trt.PluginField("kernel_size",
+    pf_kernel_size = trt.PluginField('kernel_size',
                                      np.array(kernel_size, dtype=np.int32),
                                      trt.PluginFieldType.INT32)
     pfc.append(pf_kernel_size)
 
-    pf_W = trt.PluginField("W", W, trt.PluginFieldType.FLOAT32)
+    pf_W = trt.PluginField('W', W, trt.PluginFieldType.FLOAT32)
     pfc.append(pf_W)
 
-    pf_B = trt.PluginField("B", B, trt.PluginFieldType.FLOAT32)
+    pf_B = trt.PluginField('B', B, trt.PluginFieldType.FLOAT32)
     pfc.append(pf_B)
 
-    pf_type_id = trt.PluginField("type_id", np.array([type_id],
+    pf_type_id = trt.PluginField('type_id', np.array([type_id],
                                                      dtype=np.int32),
                                  trt.PluginFieldType.INT32)
     pfc.append(pf_type_id)
 
-    pf_stride = trt.PluginField("stride", np.array(stride, dtype=np.int32),
+    pf_stride = trt.PluginField('stride', np.array(stride, dtype=np.int32),
                                 trt.PluginFieldType.INT32)
     pfc.append(pf_stride)
 
-    pf_padding = trt.PluginField("padding", np.array(padding, dtype=np.int32),
+    pf_padding = trt.PluginField('padding', np.array(padding, dtype=np.int32),
                                  trt.PluginFieldType.INT32)
     pfc.append(pf_padding)
 
-    pf_dilation = trt.PluginField("dilation",
-                                  np.array(dilation, dtype=np.int32),
+    pf_dilation = trt.PluginField('dilation', np.array(dilation,
+                                                       dtype=np.int32),
                                   trt.PluginFieldType.INT32)
     pfc.append(pf_dilation)
 
     pf_deformable_group = trt.PluginField(
-        "deformable_group", np.array([deformable_group], dtype=np.int32),
+        'deformable_group', np.array([deformable_group], dtype=np.int32),
         trt.PluginFieldType.INT32)
     pfc.append(pf_deformable_group)
 
-    pf_group = trt.PluginField("group", np.array([group], dtype=np.int32),
+    pf_group = trt.PluginField('group', np.array([group], dtype=np.int32),
                                trt.PluginFieldType.INT32)
     pfc.append(pf_group)
 
@@ -106,47 +106,47 @@ def create_dcnv2_plugin(layer_name,
 
     pfc = trt.PluginFieldCollection()
 
-    pf_out_channels = trt.PluginField("out_dims",
+    pf_out_channels = trt.PluginField('out_dims',
                                       np.array([out_channels], dtype=np.int32),
                                       trt.PluginFieldType.INT32)
     pfc.append(pf_out_channels)
 
-    pf_kernel_size = trt.PluginField("kernel_size",
+    pf_kernel_size = trt.PluginField('kernel_size',
                                      np.array(kernel_size, dtype=np.int32),
                                      trt.PluginFieldType.INT32)
     pfc.append(pf_kernel_size)
 
-    pf_W = trt.PluginField("W", W, trt.PluginFieldType.FLOAT32)
+    pf_W = trt.PluginField('W', W, trt.PluginFieldType.FLOAT32)
     pfc.append(pf_W)
 
     if B is not None:
-        pf_B = trt.PluginField("B", B, trt.PluginFieldType.FLOAT32)
+        pf_B = trt.PluginField('B', B, trt.PluginFieldType.FLOAT32)
         pfc.append(pf_B)
 
-    pf_type_id = trt.PluginField("type_id", np.array([type_id],
+    pf_type_id = trt.PluginField('type_id', np.array([type_id],
                                                      dtype=np.int32),
                                  trt.PluginFieldType.INT32)
     pfc.append(pf_type_id)
 
-    pf_stride = trt.PluginField("stride", np.array(stride, dtype=np.int32),
+    pf_stride = trt.PluginField('stride', np.array(stride, dtype=np.int32),
                                 trt.PluginFieldType.INT32)
     pfc.append(pf_stride)
 
-    pf_padding = trt.PluginField("padding", np.array(padding, dtype=np.int32),
+    pf_padding = trt.PluginField('padding', np.array(padding, dtype=np.int32),
                                  trt.PluginFieldType.INT32)
     pfc.append(pf_padding)
 
-    pf_dilation = trt.PluginField("dilation",
-                                  np.array(dilation, dtype=np.int32),
+    pf_dilation = trt.PluginField('dilation', np.array(dilation,
+                                                       dtype=np.int32),
                                   trt.PluginFieldType.INT32)
     pfc.append(pf_dilation)
 
     pf_deformable_group = trt.PluginField(
-        "deformable_group", np.array([deformable_group], dtype=np.int32),
+        'deformable_group', np.array([deformable_group], dtype=np.int32),
         trt.PluginFieldType.INT32)
     pfc.append(pf_deformable_group)
 
-    pf_group = trt.PluginField("group", np.array([group], dtype=np.int32),
+    pf_group = trt.PluginField('group', np.array([group], dtype=np.int32),
                                trt.PluginFieldType.INT32)
     pfc.append(pf_group)
 

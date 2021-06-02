@@ -1,23 +1,26 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import *
 
-        
+from .div import convert_div
+
+
 def __convert_unary(ctx, op):
     input = get_arg(ctx, 'input', pos=0, default=None)
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
     layer = ctx.network.add_unary(input_trt, op)
     output._trt = layer.get_output(0)
-    
+
 
 class UnaryModule(torch.nn.Module):
     def __init__(self, fn):
         super(UnaryModule, self).__init__()
         self.fn = fn
-        
+
     def forward(self, x):
         return self.fn(x)
-    
+
+
 # EXP : Exponentiation
 
 
@@ -52,7 +55,6 @@ def test_log():
 
 #  LOG : Log (base 2)
 
-from .div import convert_div
 
 @tensorrt_converter('torch.log2')
 @tensorrt_converter('torch.log2_')
@@ -78,6 +80,7 @@ def convert_log2(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 5, 3)])
 def test_log2():
     return UnaryModule(lambda x: torch.log2(x))
+
 
 # SQRT : Square root
 
@@ -128,6 +131,7 @@ def test_abs():
 
 
 #  NEG : Negation
+
 
 @tensorrt_converter('torch.neg')
 @tensorrt_converter('torch.neg_')
@@ -272,11 +276,11 @@ def test_atan():
 
 
 #  |    ASINH : Inverse hyperbolic sine
-#  |  
+#  |
 #  |    ACOSH : Inverse hyperbolic cosine
-#  |  
+#  |
 #  |    ATANH : Inverse hyperbolic tangent
-#  |  
+#  |
 
 #  CEIL : Ceiling
 
@@ -295,7 +299,7 @@ def test_ceil():
 
 
 #  FLOOR : Floor
-        
+
 
 @tensorrt_converter('torch.floor')
 @tensorrt_converter('torch.floor_')
@@ -311,7 +315,7 @@ def test_floor():
 
 
 #  NOT : Invert
-        
+
 
 @tensorrt_converter('torch.Tensor.__invert__')
 def convert_invert(ctx):

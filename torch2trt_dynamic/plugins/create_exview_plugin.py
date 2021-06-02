@@ -11,7 +11,7 @@ def create_exview_plugin(layer_name, expr_list):
 
     expr_str = ';'.join(expr_list)
     pf_dim_expression = trt.PluginField(
-        "dim_expression", np.array([ord(i) for i in list(expr_str)], np.uint8),
+        'dim_expression', np.array([ord(i) for i in list(expr_str)], np.uint8),
         trt.PluginFieldType.CHAR)
     pfc.append(pf_dim_expression)
 

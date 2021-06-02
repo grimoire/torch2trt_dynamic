@@ -1,6 +1,7 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
-from torch2trt_dynamic.plugins import *
 import torchvision.ops
+
+from torch2trt_dynamic.plugins import *
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torchvision.ops.roi_align')
@@ -16,20 +17,19 @@ def convert_roi_align(ctx):
     output = ctx.method_return
 
     input_trt = trt_(ctx.network, input)
-    boxes_offset_trt, boxes_trt = trt_(ctx.network, 0.5/spatial_scale, boxes)
+    boxes_offset_trt, boxes_trt = trt_(ctx.network, 0.5 / spatial_scale, boxes)
 
-    plugin = create_roiextractor_plugin("roi_align_" + str(id(boxes)),
-                                        out_size = output_size,
-                                        sample_num = sampling_ratio,
-                                        featmap_strides = [1./spatial_scale],
-                                        roi_scale_factor = 1.,
-                                        finest_scale = 56,
-                                        aligned = 1 if aligned else 0
-                               )
+    plugin = create_roiextractor_plugin('roi_align_' + str(id(boxes)),
+                                        out_size=output_size,
+                                        sample_num=sampling_ratio,
+                                        featmap_strides=[1. / spatial_scale],
+                                        roi_scale_factor=1.,
+                                        finest_scale=56,
+                                        aligned=1 if aligned else 0)
 
-    custom_layer = ctx.network.add_plugin_v2(
-        inputs=[boxes_trt, input_trt], plugin=plugin)
-    
+    custom_layer = ctx.network.add_plugin_v2(inputs=[boxes_trt, input_trt],
+                                             plugin=plugin)
+
     output._trt = custom_layer.get_output(0)
 
 
@@ -46,7 +46,9 @@ def convert_RoiAlign(ctx):
 
     old_method_args = ctx.method_args
     old_method_kwargs = ctx.method_kwargs
-    new_method_args = [input, boxes, output_size, spatial_scale, sampling_ratio, aligned]
+    new_method_args = [
+        input, boxes, output_size, spatial_scale, sampling_ratio, aligned
+    ]
     new_method_kwargs = {}
     ctx.method_args = new_method_args
     ctx.method_kwargs = new_method_kwargs

@@ -1,6 +1,8 @@
 import tensorrt as trt
-from .permute import convert_permute
+
 from torch2trt_dynamic.torch2trt_dynamic import *
+
+from .permute import convert_permute
 
 
 def set_gate_parameter(func, index, gate_type_list, hidden_size, param_i,
@@ -55,8 +57,8 @@ def convert_GRU(ctx):
         trt.RNNGateType.RESET, trt.RNNGateType.UPDATE, trt.RNNGateType.HIDDEN
     ]
     for i in range(layer_count):
-        iw = getattr(module, "weight_ih_l%s" % i).detach().cpu().numpy()
-        hw = getattr(module, "weight_hh_l%s" % i).detach().cpu().numpy()
+        iw = getattr(module, 'weight_ih_l%s' % i).detach().cpu().numpy()
+        hw = getattr(module, 'weight_hh_l%s' % i).detach().cpu().numpy()
 
         rela_index = 2 * i if module.bidirectional is True else i
 
@@ -67,8 +69,8 @@ def convert_GRU(ctx):
                            param_i=iw,
                            param_h=hw)
 
-        ib = getattr(module, "bias_ih_l%s" % i).detach().cpu().numpy()
-        hb = getattr(module, "bias_hh_l%s" % i).detach().cpu().numpy()
+        ib = getattr(module, 'bias_ih_l%s' % i).detach().cpu().numpy()
+        hb = getattr(module, 'bias_hh_l%s' % i).detach().cpu().numpy()
 
         set_gate_parameter(layer.set_bias_for_gate,
                            rela_index,
@@ -80,9 +82,9 @@ def convert_GRU(ctx):
         if module.bidirectional is True:
             # ================reverse=====================
             iw_r = getattr(module,
-                           "weight_ih_l%s_reverse" % i).detach().cpu().numpy()
+                           'weight_ih_l%s_reverse' % i).detach().cpu().numpy()
             hw_r = getattr(module,
-                           "weight_hh_l%s_reverse" % i).detach().cpu().numpy()
+                           'weight_hh_l%s_reverse' % i).detach().cpu().numpy()
 
             set_gate_parameter(layer.set_weights_for_gate,
                                2 * i + 1,
@@ -92,9 +94,9 @@ def convert_GRU(ctx):
                                param_h=hw_r)
 
             ib_r = getattr(module,
-                           "bias_ih_l%s_reverse" % i).detach().cpu().numpy()
+                           'bias_ih_l%s_reverse' % i).detach().cpu().numpy()
             hb_r = getattr(module,
-                           "bias_hh_l%s_reverse" % i).detach().cpu().numpy()
+                           'bias_hh_l%s_reverse' % i).detach().cpu().numpy()
 
             set_gate_parameter(layer.set_bias_for_gate,
                                2 * i + 1,

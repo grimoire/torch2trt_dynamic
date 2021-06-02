@@ -1,5 +1,6 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from collections.abc import Iterable
+
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.full')
@@ -9,8 +10,8 @@ def convert_full(ctx):
         size = ctx.method_args
     fill_value = ctx.method_args[1]
     dtype = torch.float32
-    if "dtype" in ctx.method_kwargs:
-        dtype = ctx.method_kwargs["dtype"]
+    if 'dtype' in ctx.method_kwargs:
+        dtype = ctx.method_kwargs['dtype']
     output = ctx.method_return
 
     if isinstance(size, int):
@@ -57,7 +58,7 @@ def convert_full(ctx):
     elif dtype == torch.bool:
         data_type = trt.DataType.BOOL
     else:
-        print("unsupported convert type:{}".format(dtype))
+        print('unsupported convert type:{}'.format(dtype))
 
     if data_type is not None:
         layer = ctx.network.add_identity(output_trt)

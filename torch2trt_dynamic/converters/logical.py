@@ -1,6 +1,6 @@
-from ..torch2trt_dynamic import *
 from ..module_test import add_module_test
-from .unary import __convert_unary 
+from ..torch2trt_dynamic import *
+from .unary import __convert_unary
 
 
 def convert_compare(ctx, compare_op):
@@ -52,8 +52,8 @@ def convert_greaterequal(ctx):
     input_b = ctx.method_args[1]
     output = ctx.method_return
 
-    greater = input_a>input_b
-    equal = input_a==input_b
+    greater = input_a > input_b
+    equal = input_a == input_b
 
     ctx.method_return = greater
     convert_greater(ctx)
@@ -74,8 +74,8 @@ def convert_lessequal(ctx):
     input_b = ctx.method_args[1]
     output = ctx.method_return
 
-    less = input_a<input_b
-    equal = input_a==input_b
+    less = input_a < input_b
+    equal = input_a == input_b
 
     ctx.method_return = less
     convert_less(ctx)
@@ -96,7 +96,7 @@ def convert_ne(ctx):
     input_b = ctx.method_args[1]
     output = ctx.method_return
 
-    equal = input_a==input_b
+    equal = input_a == input_b
 
     ctx.method_return = equal
     convert_equal(ctx)

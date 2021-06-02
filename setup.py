@@ -1,10 +1,12 @@
-import os
 import glob
+import os
 import shutil
-from setuptools import setup, find_packages
-from setuptools.command.install import install
-from setuptools.command.develop import develop
 from distutils.cmd import Command
+
+from setuptools import find_packages, setup
+from setuptools.command.develop import develop
+from setuptools.command.install import install
+
 from build import build
 
 package_data = {}
@@ -46,7 +48,7 @@ def run_plugins_compilation(cmd_obj):
 
 
 class DevelopCommand(develop):
-    description = "Builds the package and symlinks it into the PYTHONPATH"
+    description = 'Builds the package and symlinks it into the PYTHONPATH'
     user_options = develop.user_options + plugins_user_options
 
     def initialize_options(self):
@@ -62,7 +64,7 @@ class DevelopCommand(develop):
 
 
 class InstallCommand(install):
-    description = "Builds the package"
+    description = 'Builds the package'
     user_options = install.user_options + plugins_user_options
 
     def initialize_options(self):
@@ -83,7 +85,7 @@ class CleanCommand(Command):
         './build', './dist', './__pycache__', './*.pyc', './*.tgz',
         './*.egg-info'
     ]
-    description = "Command to tidy up the project root"
+    description = 'Command to tidy up the project root'
     user_options = []
 
     def initialize_options(self):
@@ -102,40 +104,39 @@ class CleanCommand(Command):
                 if not path.startswith(root_dir):
                     # Die if path in CLEAN_FILES is absolute \ outside
                     #  this directory
-                    raise ValueError("%s is not a path inside %s" %
+                    raise ValueError('%s is not a path inside %s' %
                                      (path, root_dir))
                 print('Removing %s' % os.path.relpath(path))
                 shutil.rmtree(path)
 
         cmd_list = {
-            "Removing generated protobuf cc files":
+            'Removing generated protobuf cc files':
             "find . -name '*.pb.cc' -print0 | xargs -0 rm -f;",
-            "Removing generated protobuf h files":
+            'Removing generated protobuf h files':
             "find . -name '*.pb.h' -print0 | xargs -0 rm -f;",
-            "Removing generated protobuf py files":
+            'Removing generated protobuf py files':
             "find . -name '*_pb2.py' -print0 | xargs -0 rm -f;",
-            "Removing generated ninja files":
+            'Removing generated ninja files':
             "find . -name '*.ninja*' -print0 | xargs -0 rm -f;",
-            "Removing generated o files":
+            'Removing generated o files':
             "find . -name '*.o' -print0 | xargs -0 rm -f;",
-            "Removing generated so files":
+            'Removing generated so files':
             "find . -name '*.so' -print0 | xargs -0 rm -f;",
         }
 
         for cmd, script in cmd_list.items():
-            print("{}".format(cmd))
+            print('{}'.format(cmd))
             os.system(script)
 
 
-setup(
-    name='torch2trt_dynamic',
-    version='0.4.0',
-    description='An easy to use PyTorch to TensorRT converter' +
-    ' with dynamic shape support',
-    cmdclass={
-        'install': InstallCommand,
-        'clean': CleanCommand,
-        'develop': DevelopCommand,
-    },
-    packages=find_packages(),
-    package_data=package_data)
+setup(name='torch2trt_dynamic',
+      version='0.4.0',
+      description='An easy to use PyTorch to TensorRT converter' +
+      ' with dynamic shape support',
+      cmdclass={
+          'install': InstallCommand,
+          'clean': CleanCommand,
+          'develop': DevelopCommand,
+      },
+      packages=find_packages(),
+      package_data=package_data)

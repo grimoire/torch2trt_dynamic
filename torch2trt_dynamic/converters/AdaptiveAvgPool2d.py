@@ -1,7 +1,7 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
-from .adaptive_avg_pool2d import convert_adaptive_avg_pool2d
+from torch2trt_dynamic.torch2trt_dynamic import *
 
+from .adaptive_avg_pool2d import convert_adaptive_avg_pool2d
 
 
 @tensorrt_converter('torch.nn.AdaptiveAvgPool2d.forward')
@@ -9,13 +9,14 @@ def convert_AdaptiveAvgPool2d(ctx):
     ctx.method_args = (ctx.method_args[1], ctx.method_args[0].output_size)
     convert_adaptive_avg_pool2d(ctx)
 
+
 ### old
 # @tensorrt_converter('torch.nn.AdaptiveAvgPool2d.forward')
 # def convert_AdaptiveAvgPool2d(ctx):
 #     module = ctx.method_args[0]
 #     input = ctx.method_args[1]
 #     output = ctx.method_return
-    
+
 #     input_trt = trt_(ctx.network, input)
 
 #     output_size = module.output_size

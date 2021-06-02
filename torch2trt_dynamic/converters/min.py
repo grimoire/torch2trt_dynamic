@@ -1,9 +1,10 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
-from .unary import UnaryModule
+from torch2trt_dynamic.torch2trt_dynamic import *
+
 from .flatten import *
-from .topk import *
 from .squeeze import *
+from .topk import *
+from .unary import UnaryModule
 
 
 def __convert_min_elementwise(ctx):
@@ -11,9 +12,10 @@ def __convert_min_elementwise(ctx):
     input_b = ctx.method_args[1]
     input_a_trt, input_b_trt = trt_(ctx.network, input_a, input_b)
     output = ctx.method_return
-    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, trt.ElementWiseOperation.MIN)
+    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt,
+                                        trt.ElementWiseOperation.MIN)
     output._trt = layer.get_output(0)
-    
+
 
 def __convert_min_reduce(ctx):
 
@@ -21,9 +23,10 @@ def __convert_min_reduce(ctx):
         input = ctx.method_args[0]
         dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(0, input.ndim)))
         keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
-        input_trt= trt_(ctx.network, input)
+        input_trt = trt_(ctx.network, input)
         output_val = ctx.method_return
-        layer = ctx.network.add_reduce(input_trt,  trt.ReduceOperation.MIN, torch_dim_to_trt_axes(dim), keepdim)
+        layer = ctx.network.add_reduce(input_trt, trt.ReduceOperation.MIN,
+                                       torch_dim_to_trt_axes(dim), keepdim)
         output_val._trt = layer.get_output(0)
         return
 
@@ -46,7 +49,7 @@ def __convert_min_reduce(ctx):
         convert_flatten(ctx)
         input = ctx.method_return
         dim = 0
-    
+
     # topk
     topk_output = input.topk(1, dim, False)
     topk_input = [input, 1, dim, False]
@@ -57,9 +60,9 @@ def __convert_min_reduce(ctx):
     topk_value = ctx.method_return[0]
     topk_index = ctx.method_return[1]
 
-
     # keepdim
-    if not keepdim and topk_index.shape[dim]==1 and len(topk_index.shape)>1:
+    if not keepdim and topk_index.shape[dim] == 1 and len(
+            topk_index.shape) > 1:
 
         topk_index_squeeze = topk_index.squeeze(dim)
         ctx.method_args = [topk_index, dim]
@@ -85,16 +88,16 @@ def __convert_min_reduce(ctx):
     ctx.method_args = old_args
     ctx.method_kwargs = old_kwargs
 
-    
 
 @tensorrt_converter('torch.min')
 @tensorrt_converter('torch.Tensor.min')
 def convert_min(ctx):
-    if len(ctx.method_args) > 1 and isinstance(ctx.method_args[1], torch.Tensor):
+    if len(ctx.method_args) > 1 and isinstance(ctx.method_args[1],
+                                               torch.Tensor):
         __convert_min_elementwise(ctx)
     else:
         __convert_min_reduce(ctx)
-        
+
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
@@ -116,10 +119,12 @@ def test_min_reduce_dim1_keepdim():
 class MinElementwise(torch.nn.Module):
     def forward(self, x, y):
         return torch.min(x, y)
-    
-    
+
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3), (1, 3, 3)])
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3), (1,)]) # broadcast
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3), (1, 3, 3)]) # broadcast
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3),
+                                                       (1, )])  # broadcast
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3),
+                                                       (1, 3, 3)])  # broadcast
 def test_min_elementwise():
     return MinElementwise()

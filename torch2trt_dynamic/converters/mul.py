@@ -1,5 +1,5 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.mul')
@@ -11,7 +11,8 @@ def convert_mul(ctx):
     input_b = ctx.method_args[1]
     input_a_trt, input_b_trt = trt_(ctx.network, input_a, input_b)
     output = ctx.method_return
-    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, trt.ElementWiseOperation.PROD)
+    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt,
+                                        trt.ElementWiseOperation.PROD)
     output._trt = layer.get_output(0)
 
 
@@ -22,7 +23,9 @@ class Mul(torch.nn.Module):
     def forward(self, x, y):
         return x * y
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224),
+                                                       (1, 3, 224, 224)])
 def test_mul_basic():
     return Mul()
 
@@ -36,7 +39,8 @@ class IMul(torch.nn.Module):
         return x
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224),
+                                                       (1, 3, 224, 224)])
 def test_mul_imul():
     return IMul()
 
@@ -47,9 +51,10 @@ class TorchMul(torch.nn.Module):
 
     def forward(self, x, y):
         return torch.mul(x, y)
-    
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224),
+                                                       (1, 3, 224, 224)])
 def test_mul_torchmul():
     return TorchMul()
 

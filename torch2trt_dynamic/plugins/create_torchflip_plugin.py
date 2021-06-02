@@ -9,7 +9,7 @@ def create_torchflip_plugin(layer_name, dims):
 
     pfc = trt.PluginFieldCollection()
 
-    pf_dims = trt.PluginField("dims", np.array(dims, dtype=np.int32),
+    pf_dims = trt.PluginField('dims', np.array(dims, dtype=np.int32),
                               trt.PluginFieldType.INT32)
     pfc.append(pf_dims)
 

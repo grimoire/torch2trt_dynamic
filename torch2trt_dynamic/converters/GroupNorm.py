@@ -1,5 +1,5 @@
-from ..torch2trt_dynamic import *
 from ..plugins import *
+from ..torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.nn.GroupNorm.forward')
@@ -15,7 +15,7 @@ def convert_GroupNorm(ctx):
     num_groups = module.num_groups
     eps = module.eps
 
-    plugin = create_groupnorm_plugin("groupnorm_" + str(id(module)),
+    plugin = create_groupnorm_plugin('groupnorm_' + str(id(module)),
                                      num_groups=num_groups,
                                      eps=eps)
 

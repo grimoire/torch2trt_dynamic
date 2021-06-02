@@ -10,7 +10,7 @@ def create_nms_plugin(layer_name, iou_threshold):
     pfc = trt.PluginFieldCollection()
 
     pf_iou_threshold = trt.PluginField(
-        "iou_threshold", np.array([iou_threshold], dtype=np.float32),
+        'iou_threshold', np.array([iou_threshold], dtype=np.float32),
         trt.PluginFieldType.FLOAT32)
     pfc.append(pf_iou_threshold)
 

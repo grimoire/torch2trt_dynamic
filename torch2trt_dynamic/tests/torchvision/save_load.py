@@ -9,8 +9,9 @@ if __name__ == '__main__':
     data = torch.randn((1, 3, 224, 224)).cuda().half()
 
     print('Running torch2trt...')
-    model_trt = torch2trt_dynamic(
-        model, [data], fp16_mode=True, max_workspace_size=1 << 25)
+    model_trt = torch2trt_dynamic(model, [data],
+                                  fp16_mode=True,
+                                  max_workspace_size=1 << 25)
 
     print('Saving model...')
     torch.save(model_trt.state_dict(), '.test_model.pth')

@@ -1,9 +1,10 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
-from .unary import UnaryModule
+from torch2trt_dynamic.torch2trt_dynamic import *
+
 from .flatten import *
-from .topk import *
 from .squeeze import *
+from .topk import *
+from .unary import UnaryModule
 
 
 def __convert_max_elementwise(ctx):

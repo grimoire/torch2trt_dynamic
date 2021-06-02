@@ -1,5 +1,5 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.Tensor.softmax')
@@ -15,11 +15,11 @@ def convert_softmax(ctx):
     dim = get_arg(ctx, 'dim', pos=1, default=None)
     if dim is None:
         dim = -1
-    if dim<0:
-        dim = len(input.shape)+dim
+    if dim < 0:
+        dim = len(input.shape) + dim
 
     # axes = 1 << (dim - 1)
-    axes = 1<<dim
+    axes = 1 << dim
 
     layer = ctx.network.add_softmax(input=input_trt)
     layer.axes = axes

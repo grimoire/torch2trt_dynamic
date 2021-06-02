@@ -1,5 +1,5 @@
-from ..torch2trt_dynamic import *
 from ..module_test import add_module_test
+from ..torch2trt_dynamic import *
 from .Linear import convert_Linear
 
 

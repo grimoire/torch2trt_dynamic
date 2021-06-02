@@ -1,5 +1,5 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.pow')
@@ -11,28 +11,32 @@ def convert_pow(ctx):
     input_b = ctx.method_args[1]
     input_a_trt, input_b_trt = trt_(ctx.network, input_a, input_b)
     output = ctx.method_return
-    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, trt.ElementWiseOperation.POW)
+    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt,
+                                        trt.ElementWiseOperation.POW)
     output._trt = layer.get_output(0)
 
-    
+
 @tensorrt_converter('torch.Tensor.__rpow__')
 def convert_pow(ctx):
     input_a = ctx.method_args[1]
     input_b = ctx.method_args[0]  # flipped for rpow
     input_a_trt, input_b_trt = trt_(ctx.network, input_a, input_b)
     output = ctx.method_return
-    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt, trt.ElementWiseOperation.POW)
+    layer = ctx.network.add_elementwise(input_a_trt, input_b_trt,
+                                        trt.ElementWiseOperation.POW)
     output._trt = layer.get_output(0)
-    
+
 
 class Pow(torch.nn.Module):
     def __init__(self):
         super(Pow, self).__init__()
 
     def forward(self, x, y):
-        return x ** y
+        return x**y
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
+
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224),
+                                                       (1, 3, 224, 224)])
 def test_pow_basic():
     return Pow()
 
@@ -45,7 +49,6 @@ def test_pow_basic():
 #     def forward(self, x, y):
 #         x **= y
 #         return x
-
 
 # @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
 # def test_pow_ipow():
@@ -60,7 +63,8 @@ class TorchPow(torch.nn.Module):
         return torch.pow(x, y)
 
 
-@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
+@add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224),
+                                                       (1, 3, 224, 224)])
 def test_torch_pow():
     return TorchPow()
 
@@ -70,7 +74,7 @@ class RpowInt(torch.nn.Module):
         super(RpowInt, self).__init__()
 
     def forward(self, x):
-        return 2 ** x
+        return 2**x
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])
@@ -83,7 +87,7 @@ class RpowFloat(torch.nn.Module):
         super(RpowFloat, self).__init__()
 
     def forward(self, x):
-        return 2.0 ** x
+        return 2.0**x
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224)])

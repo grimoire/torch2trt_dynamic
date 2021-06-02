@@ -1,6 +1,7 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
-from torch2trt_dynamic.plugins import *
 import torchvision.ops
+
+from torch2trt_dynamic.plugins import *
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torchvision.ops.roi_pool')
@@ -15,15 +16,15 @@ def convert_roi_pool(ctx):
     input_trt = trt_(ctx.network, input)
     boxes_trt = trt_(ctx.network, boxes)
 
-    plugin = create_roipool_plugin("roi_pool_" + str(id(boxes)),
-                                        out_size = output_size,
-                                        featmap_strides = [1./spatial_scale],
-                                        roi_scale_factor = -1,
-                                        finest_scale = 56)
+    plugin = create_roipool_plugin('roi_pool_' + str(id(boxes)),
+                                   out_size=output_size,
+                                   featmap_strides=[1. / spatial_scale],
+                                   roi_scale_factor=-1,
+                                   finest_scale=56)
 
-    custom_layer = ctx.network.add_plugin_v2(
-        inputs=[boxes_trt, input_trt], plugin=plugin)
-    
+    custom_layer = ctx.network.add_plugin_v2(inputs=[boxes_trt, input_trt],
+                                             plugin=plugin)
+
     output._trt = custom_layer.get_output(0)
 
 

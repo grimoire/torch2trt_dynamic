@@ -26,7 +26,7 @@ def convert_cumprod(ctx):
     else:
         input_trt = trt_(ctx.network, input)
 
-    plugin = create_torchcum_plugin("cumprod_" + str(id(input)),
+    plugin = create_torchcum_plugin('cumprod_' + str(id(input)),
                                     dim=dim,
                                     cum_type=cum_type)
 

@@ -1,7 +1,6 @@
+from ..plugins import *
 from ..torch2trt_dynamic import *
 from .cast_type import convert_type
-
-from ..plugins import *
 
 
 @tensorrt_converter('torch.cumsum')
@@ -27,7 +26,7 @@ def convert_cumsum(ctx):
     else:
         input_trt = trt_(ctx.network, input)
 
-    plugin = create_torchcum_plugin("cumsum_" + str(id(input)),
+    plugin = create_torchcum_plugin('cumsum_' + str(id(input)),
                                     dim=dim,
                                     cum_type=cum_type)
 

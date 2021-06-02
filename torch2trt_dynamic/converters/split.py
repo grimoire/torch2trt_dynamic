@@ -1,5 +1,5 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
 from torch2trt_dynamic.module_test import add_module_test
+from torch2trt_dynamic.torch2trt_dynamic import *
 
 
 @tensorrt_converter('torch.split')
@@ -10,46 +10,47 @@ def convert_split(ctx):
     # we don't need to parse split/chunk (arg 1)
     # since we infer size from output tensors
     dim = get_arg(ctx, 'dim', 2, 0)
-    
+
     outputs = ctx.method_return
-    
-    assert(dim >= 1)
-    
-    start = [0] * len(input.shape) # exclude batch
+
+    assert (dim >= 1)
+
+    start = [0] * len(input.shape)  # exclude batch
     stride = [1] * len(start)
     offset = 0
     trt_dim = dim
-    
+
     # add slice layers
     for i, output in enumerate(outputs):
         shape = list(output.shape)
         start[trt_dim] = offset
-        layer = ctx.network.add_slice(input_trt, start=start, shape=shape, stride=stride)
+        layer = ctx.network.add_slice(input_trt,
+                                      start=start,
+                                      shape=shape,
+                                      stride=stride)
         output._trt = layer.get_output(0)
         offset = offset + shape[trt_dim]
-        
+
 
 class TorchSplit(torch.nn.Module):
-    
     def __init__(self, *args, **kwargs):
         super(TorchSplit, self).__init__()
         self.args = args
         self.kwargs = kwargs
-        
+
     def forward(self, x):
         return torch.split(x, *self.args, **self.kwargs)
-    
-    
+
+
 class TensorSplit(torch.nn.Module):
-    
     def __init__(self, *args, **kwargs):
         super(TensorSplit, self).__init__()
         self.args = args
         self.kwargs = kwargs
-        
+
     def forward(self, x):
         return x.split(*self.args, **self.kwargs)
-    
+
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
@@ -62,7 +63,7 @@ def test_torch_split_1_1():
 def test_torch_split_2_1():
     return TorchSplit(2, 1)
 
-    
+
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 3, 3)])
 def test_torch_split_3_1():
