@@ -1,5 +1,9 @@
+import tensorrt as trt
+import torch
+
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (tensorrt_converter,
+                                                 torch_dtype_to_trt, trt_)
 
 
 @tensorrt_converter('torch.nn.Conv2d.forward')
@@ -31,11 +35,12 @@ def convert_Conv2d(ctx):
     if module.bias is not None:
         bias = module.bias.detach().cpu().numpy()
 
-    layer = ctx.network.add_convolution(input=input_trt,
-                                        num_output_maps=module.out_channels,
-                                        kernel_shape=kernel_size,
-                                        kernel=kernel,
-                                        bias=bias)
+    layer = ctx.network.add_convolution(
+        input=input_trt,
+        num_output_maps=module.out_channels,
+        kernel_shape=kernel_size,
+        kernel=kernel,
+        bias=bias)
     layer.stride = stride
     layer.padding = padding
     layer.dilation = dilation
@@ -63,9 +68,5 @@ def test_Conv2d_kernel3():
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 10, 224, 224)])
 def test_Conv2d_dilation2():
-    return torch.nn.Conv2d(10,
-                           5,
-                           kernel_size=3,
-                           stride=1,
-                           padding=1,
-                           dilation=2)
+    return torch.nn.Conv2d(
+        10, 5, kernel_size=3, stride=1, padding=1, dilation=2)

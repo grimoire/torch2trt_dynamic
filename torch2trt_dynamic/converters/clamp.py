@@ -1,5 +1,9 @@
+import tensorrt as trt
+import torch
+
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 torch_dtype_from_trt, trt_)
 
 from .size import IntWarper
 
@@ -29,9 +33,9 @@ def __add_clamp(network, trt_input, val, op):
         val_trt = layer.get_output(0)
     else:
         # val_shape = (1, ) * len(trt_input.shape)  # broadcast all dimensions
-        val_tensor = val * torch.ones(val_shape,
-                                      dtype=torch_dtype_from_trt(
-                                          trt_input.dtype)).cpu().numpy()
+        val_tensor = val * torch.ones(
+            val_shape, dtype=torch_dtype_from_trt(
+                trt_input.dtype)).cpu().numpy()
         layer = network.add_constant(val_shape, val_tensor)
         val_trt = layer.get_output(0)
     layer = network.add_elementwise(trt_input, val_trt, op)
@@ -58,6 +62,7 @@ def convert_clamp_min(ctx):
 
 
 class TorchClampMin(torch.nn.Module):
+
     def forward(self, x):
         return torch.clamp_min(x, -0.1)
 
@@ -68,6 +73,7 @@ def test_torch_clamp_min():
 
 
 class TensorClampMin(torch.nn.Module):
+
     def forward(self, x):
         return x.clamp_min(-0.1)
 
@@ -95,6 +101,7 @@ def convert_clamp_max(ctx):
 
 
 class TorchClampMax(torch.nn.Module):
+
     def forward(self, x):
         return torch.clamp_max(x, 0.1)
 
@@ -105,6 +112,7 @@ def test_torch_clamp_max():
 
 
 class TensorClampMax(torch.nn.Module):
+
     def forward(self, x):
         return x.clamp_max(0.1)
 
@@ -138,6 +146,7 @@ def convert_clamp(ctx):
 
 
 class TorchClamp(torch.nn.Module):
+
     def forward(self, x):
         return torch.clamp(x, -0.1, 0.1)
 
@@ -148,6 +157,7 @@ def test_torch_clamp():
 
 
 class TensorClamp(torch.nn.Module):
+
     def forward(self, x):
         return x.clamp(-0.1, 0.1)
 

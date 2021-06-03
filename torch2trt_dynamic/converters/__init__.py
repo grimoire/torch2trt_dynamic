@@ -26,10 +26,10 @@ from .cat import convert_cat
 from .chunk import (convert_chunk, test_tensor_chunk_3_2, test_torch_chunk_1_1,
                     test_torch_chunk_2_1, test_torch_chunk_3_1,
                     test_torch_chunk_3_2)
-from .clamp import *
-from .Conv1d import *
-from .Conv2d import *
-from .conv2d import *
+from .clamp import convert_clamp, convert_clamp_max, convert_clamp_min
+from .Conv1d import convert_Conv1d
+from .Conv2d import convert_Conv2d
+from .conv2d import convert_conv2d
 from .ConvTranspose1d import convert_ConvTranspose1d
 from .ConvTranspose2d import *
 from .div import *
@@ -137,6 +137,20 @@ __all__ += [
     'convert_chunk', 'test_torch_chunk_1_1', 'test_torch_chunk_2_1',
     'test_torch_chunk_3_1', 'test_torch_chunk_3_2', 'test_tensor_chunk_3_2'
 ]
+# clamp
+__all__ += [
+    'convert_clamp',
+    'convert_clamp_max',
+    'convert_clamp_min',
+]
+# Conv1d
+__all__ += ['convert_Conv1d']
+# Conv2d
+__all__ += ['convert_Conv2d']
+# conv2d
+__all__ += ['convert_conv2d']
+# ConvTranspose1d
+__all__ += ['convert_ConvTranspose1d']
 
 try:
     # custom plugin support
