@@ -38,11 +38,12 @@ def convert_ConvTranspose1d(ctx):
     input_trt = layer.get_output(0)
 
     # deconv
-    layer = ctx.network.add_deconvolution(input=input_trt,
-                                          num_output_maps=module.out_channels,
-                                          kernel_shape=kernel_size,
-                                          kernel=kernel,
-                                          bias=bias)
+    layer = ctx.network.add_deconvolution(
+        input=input_trt,
+        num_output_maps=module.out_channels,
+        kernel_shape=kernel_size,
+        kernel=kernel,
+        bias=bias)
     layer.stride = stride
     layer.padding = padding
 

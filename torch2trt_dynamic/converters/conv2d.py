@@ -1,7 +1,6 @@
 # copy from
 # https://github.com/yuzhiyiliu/torch2trt/blob/origin/torch.nn.functional.conv2d_support/torch2trt/converters/conv2d.py
 import torch
-
 from torch2trt_dynamic.torch2trt_dynamic import get_arg, tensorrt_converter
 
 from .Conv2d import convert_Conv2d

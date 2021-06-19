@@ -1,5 +1,10 @@
+import numpy as np
+import tensorrt as trt
+import torch
+
 from ..module_test import add_module_test
-from ..torch2trt_dynamic import *
+from ..torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                 torch_dim_to_trt_axes, trt_)
 
 
 def _reshape_1d2d3d(network, x_trt):
@@ -79,9 +84,6 @@ def _add_scale_1d2d3d(network,
 @tensorrt_converter('torch.instance_norm')
 @tensorrt_converter('torch.nn.functional.instance_norm')
 def convert_instance_norm(ctx):
-    support_dynamic_shape = False
-    if hasattr(ctx, 'support_dynamic_shape'):
-        support_dynamic_shape = ctx.support_dynamic_shape
 
     input = get_arg(ctx, 'input', pos=0, default=None)
     running_mean = get_arg(ctx, 'running_mean', pos=1, default=None)
@@ -89,7 +91,7 @@ def convert_instance_norm(ctx):
     weight = get_arg(ctx, 'weight', pos=3, default=None)
     bias = get_arg(ctx, 'bias', pos=4, default=None)
     use_input_stats = get_arg(ctx, 'use_input_stats', pos=5, default=True)
-    momentum = get_arg(ctx, 'momentum', pos=6, default=0.1)
+    # momentum = get_arg(ctx, 'momentum', pos=6, default=0.1)
     eps = get_arg(ctx, 'eps', pos=7, default=1e-05)
     output = ctx.method_return
 
@@ -116,8 +118,6 @@ def convert_instance_norm(ctx):
             layer = ctx.network.add_shuffle(result_trt)
             layer.set_input(1, shape_trt)
             result_trt = layer.get_output(0)
-
-        # result_trt = _add_scale_1d2d3d(ctx.network, input_trt, trt.ScaleMode.CHANNEL, offset, scale, power, support_dynamic_shape)
 
         output._trt = result_trt
 
@@ -165,7 +165,6 @@ def convert_instance_norm(ctx):
             result_trt = ctx.network.add_scale(
                 result_trt, trt.ScaleMode.CHANNEL, bias_np, weight_np,
                 np.ones_like(bias_np)).get_output(0)
-            # result_trt = _add_scale_1d2d3d(ctx.network, result_trt, trt.ScaleMode.CHANNEL, bias_np, weight_np, np.ones_like(bias_np), support_dynamic_shape)
 
         if input_trt != new_input_trt:  # recover shape
             layer = ctx.network.add_shuffle(result_trt)

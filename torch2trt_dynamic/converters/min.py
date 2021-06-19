@@ -1,9 +1,12 @@
+import tensorrt as trt
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 torch_dim_to_trt_axes, trt_)
 
-from .flatten import *
-from .squeeze import *
-from .topk import *
+from .flatten import convert_flatten
+from .squeeze import convert_squeeze
+from .topk import convert_topk
 from .unary import UnaryModule
 
 
@@ -117,6 +120,7 @@ def test_min_reduce_dim1_keepdim():
 
 
 class MinElementwise(torch.nn.Module):
+
     def forward(self, x, y):
         return torch.min(x, y)
 

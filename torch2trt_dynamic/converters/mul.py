@@ -1,5 +1,7 @@
+import tensorrt as trt
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.mul')
@@ -17,6 +19,7 @@ def convert_mul(ctx):
 
 
 class Mul(torch.nn.Module):
+
     def __init__(self):
         super(Mul, self).__init__()
 
@@ -31,6 +34,7 @@ def test_mul_basic():
 
 
 class IMul(torch.nn.Module):
+
     def __init__(self):
         super(IMul, self).__init__()
 
@@ -46,6 +50,7 @@ def test_mul_imul():
 
 
 class TorchMul(torch.nn.Module):
+
     def __init__(self):
         super(TorchMul, self).__init__()
 
@@ -60,6 +65,7 @@ def test_mul_torchmul():
 
 
 class RMulInt(torch.nn.Module):
+
     def __init__(self):
         super(RMulInt, self).__init__()
 
@@ -73,6 +79,7 @@ def test_rmul_int():
 
 
 class RMulFloat(torch.nn.Module):
+
     def __init__(self):
         super(RMulFloat, self).__init__()
 

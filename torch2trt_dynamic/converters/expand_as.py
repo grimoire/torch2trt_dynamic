@@ -13,7 +13,7 @@ def convert_expand_as(ctx):
 
     plugin = create_repeat_plugin('repeat_' + str(id(input)), repeat_shape=[])
 
-    custom_layer = ctx.network.add_plugin_v2(inputs=[input_trt, other_trt],
-                                             plugin=plugin)
+    custom_layer = ctx.network.add_plugin_v2(
+        inputs=[input_trt, other_trt], plugin=plugin)
 
     output._trt = custom_layer.get_output(0)

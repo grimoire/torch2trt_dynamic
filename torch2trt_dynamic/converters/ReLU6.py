@@ -9,10 +9,10 @@ def convert_ReLU6(ctx):
 
     input_trt, trt_6 = trt_(ctx.network, input, 6.)
 
-    layer = ctx.network.add_activation(input=input_trt,
-                                       type=trt.ActivationType.RELU)
-    layer = ctx.network.add_elementwise(layer.get_output(0), trt_6,
-                                        trt.ElementWiseOperation.MIN)
+    layer = ctx.network.add_activation(
+        input=input_trt, type=trt.ActivationType.RELU)
+    layer = ctx.network.add_elementwise(
+        layer.get_output(0), trt_6, trt.ElementWiseOperation.MIN)
 
     output._trt = layer.get_output(0)
 

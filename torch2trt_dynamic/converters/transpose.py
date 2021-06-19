@@ -1,5 +1,4 @@
 import torch
-
 from torch2trt_dynamic.module_test import add_module_test
 from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
@@ -26,6 +25,7 @@ def convert_transpose(ctx):
 
 
 class Transpose(torch.nn.Module):
+
     def __init__(self, dim0, dim1):
         super(Transpose, self).__init__()
         self.dim0 = dim0

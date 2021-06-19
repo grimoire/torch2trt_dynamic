@@ -1,6 +1,7 @@
-import torch
-
-from torch2trt_dynamic.torch2trt_dynamic import *
+import tensorrt as trt
+from torch2trt_dynamic.torch2trt_dynamic import (slice_shape_trt,
+                                                 tensor_trt_get_shape_trt,
+                                                 tensorrt_converter, trt_)
 
 from .size import IntWarper
 

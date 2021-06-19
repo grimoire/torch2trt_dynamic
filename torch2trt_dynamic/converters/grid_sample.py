@@ -27,12 +27,13 @@ def convert_grid_sample(ctx):
     elif padding_mode == 'reflection':
         padding_mode = 2
 
-    plugin = create_gridsample_plugin('torch_gridsample_' + str(id(input)),
-                                      mode=mode,
-                                      padding_mode=padding_mode,
-                                      align_corners=align_corners)
+    plugin = create_gridsample_plugin(
+        'torch_gridsample_' + str(id(input)),
+        mode=mode,
+        padding_mode=padding_mode,
+        align_corners=align_corners)
 
-    layer = ctx.network.add_plugin_v2(inputs=[input_trt, grid_trt],
-                                      plugin=plugin)
+    layer = ctx.network.add_plugin_v2(
+        inputs=[input_trt, grid_trt], plugin=plugin)
 
     output._trt = layer.get_output(0)

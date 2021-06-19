@@ -1,4 +1,8 @@
-from ..torch2trt_dynamic import *
+import tensorrt as trt
+import torch
+
+from ..torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                 torch_dtype_to_trt, trt_, trt_cast)
 
 
 @tensorrt_converter('torch.linspace')
@@ -23,7 +27,7 @@ def convert_linspace(ctx):
         output_trt = trt_(ctx.network, output)
 
     else:
-        ## create fill
+        # create fill
 
         # compute shape
         start_trt = trt_(ctx.network, start)

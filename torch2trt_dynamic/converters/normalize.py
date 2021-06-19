@@ -1,5 +1,8 @@
+import tensorrt as trt
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 torch_dim_to_trt_axes, trt_)
 
 
 @tensorrt_converter('torch.nn.functional.normalize')
@@ -25,10 +28,11 @@ def convert_normalize(ctx):
                                  trt.UnaryOperation.ABS).get_output(0)
     norm = ctx.network.add_elementwise(
         norm, p_trt, trt.ElementWiseOperation.POW).get_output(0)
-    norm = ctx.network.add_reduce(norm,
-                                  trt.ReduceOperation.SUM,
-                                  torch_dim_to_trt_axes(dim),
-                                  keep_dims=True).get_output(0)
+    norm = ctx.network.add_reduce(
+        norm,
+        trt.ReduceOperation.SUM,
+        torch_dim_to_trt_axes(dim),
+        keep_dims=True).get_output(0)
     norm = ctx.network.add_elementwise(
         norm, p_inv_trt, trt.ElementWiseOperation.POW).get_output(0)
 
@@ -42,6 +46,7 @@ def convert_normalize(ctx):
 
 
 class Normalize(torch.nn.Module):
+
     def __init__(self, *args, **kwargs):
         super(Normalize, self).__init__()
         self.args = args

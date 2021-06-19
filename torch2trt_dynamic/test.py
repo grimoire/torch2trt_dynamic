@@ -5,7 +5,6 @@ import time
 
 import torch
 from termcolor import colored
-
 from torch2trt_dynamic import torch2trt_dynamic
 
 from .module_test import MODULE_TESTS
@@ -94,20 +93,22 @@ def run(self):
 if __name__ == '__main__':
 
     parser = argparse.ArgumentParser()
-    parser.add_argument('--output',
-                        '-o',
-                        help='Test output file path',
-                        type=str,
-                        default='torch2trt_test.md')
+    parser.add_argument(
+        '--output',
+        '-o',
+        help='Test output file path',
+        type=str,
+        default='torch2trt_test.md')
     parser.add_argument(
         '--name',
         help='Regular expression to filter modules to test by name',
         type=str,
         default='.*')
-    parser.add_argument('--tolerance',
-                        help='Maximum error to print warning for entry',
-                        type=float,
-                        default='-1')
+    parser.add_argument(
+        '--tolerance',
+        help='Maximum error to print warning for entry',
+        type=float,
+        default='-1')
     parser.add_argument(
         '--include',
         help='Addition python file to include defining additional tests',

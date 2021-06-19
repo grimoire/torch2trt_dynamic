@@ -14,7 +14,7 @@ def convert_bmm(ctx):
 
     plugin = create_torchbmm_plugin('torch_bmm_' + str(id(mat0)))
 
-    layer = ctx.network.add_plugin_v2(inputs=[mat0_trt, mat1_trt],
-                                      plugin=plugin)
+    layer = ctx.network.add_plugin_v2(
+        inputs=[mat0_trt, mat1_trt], plugin=plugin)
 
     output._trt = layer.get_output(0)

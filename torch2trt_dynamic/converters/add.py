@@ -1,6 +1,5 @@
 import tensorrt as trt
 import torch
-
 from torch2trt_dynamic.module_test import add_module_test
 from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
@@ -20,6 +19,7 @@ def convert_add(ctx):
 
 
 class Add(torch.nn.Module):
+
     def __init__(self):
         super(Add, self).__init__()
 
@@ -34,6 +34,7 @@ def test_add_basic():
 
 
 class IAdd(torch.nn.Module):
+
     def __init__(self):
         super(IAdd, self).__init__()
 
@@ -49,6 +50,7 @@ def test_add_iadd():
 
 
 class TorchAdd(torch.nn.Module):
+
     def __init__(self):
         super(TorchAdd, self).__init__()
 
@@ -63,6 +65,7 @@ def test_add_torchadd():
 
 
 class RAddInt(torch.nn.Module):
+
     def __init__(self):
         super(RAddInt, self).__init__()
 
@@ -76,6 +79,7 @@ def test_add_radd_int():
 
 
 class RAddFloat(torch.nn.Module):
+
     def __init__(self):
         super(RAddFloat, self).__init__()
 

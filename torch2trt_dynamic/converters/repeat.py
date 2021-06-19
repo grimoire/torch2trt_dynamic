@@ -12,8 +12,8 @@ def convert_repeat(ctx):
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
 
-    plugin = create_repeat_plugin('repeat_' + str(id(input)),
-                                  repeat_shape=shape)
+    plugin = create_repeat_plugin(
+        'repeat_' + str(id(input)), repeat_shape=shape)
 
     custom_layer = ctx.network.add_plugin_v2(inputs=[input_trt], plugin=plugin)
 

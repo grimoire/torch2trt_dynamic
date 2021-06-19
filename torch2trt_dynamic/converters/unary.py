@@ -13,6 +13,7 @@ def __convert_unary(ctx, op):
 
 
 class UnaryModule(torch.nn.Module):
+
     def __init__(self, fn):
         super(UnaryModule, self).__init__()
         self.fn = fn

@@ -1,4 +1,4 @@
-from ..torch2trt_dynamic import *
+from ..torch2trt_dynamic import tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.nn.Dropout.forward')

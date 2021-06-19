@@ -1,6 +1,5 @@
 import tensorrt as trt
 import torch
-
 from torch2trt_dynamic.module_test import add_module_test
 from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
                                                  trt_)
@@ -33,9 +32,8 @@ def convert_avg_pool2d(ctx):
     if not isinstance(padding, tuple):
         padding = (padding, ) * 2
 
-    layer = ctx.network.add_pooling(input=input_trt,
-                                    type=trt.PoolingType.AVERAGE,
-                                    window_size=kernel_size)
+    layer = ctx.network.add_pooling(
+        input=input_trt, type=trt.PoolingType.AVERAGE, window_size=kernel_size)
 
     layer.stride = stride
     layer.padding = padding
@@ -50,10 +48,8 @@ def convert_avg_pool2d(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 6)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 5, 7)])
 def test_avg_pool2d_without_ceil_mode():
-    return torch.nn.AvgPool2d(kernel_size=3,
-                              stride=2,
-                              padding=1,
-                              ceil_mode=False)
+    return torch.nn.AvgPool2d(
+        kernel_size=3, stride=2, padding=1, ceil_mode=False)
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 6)])

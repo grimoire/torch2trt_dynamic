@@ -1,4 +1,6 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
+import tensorrt as trt
+from torch2trt_dynamic.torch2trt_dynamic import (tensorrt_converter,
+                                                 torch_dtype_to_trt, trt_)
 
 
 @tensorrt_converter('torch.nn.ConvTranspose2d.forward')
@@ -26,11 +28,12 @@ def convert_ConvTranspose2d(ctx):
     if module.bias is not None:
         bias = module.bias.detach().cpu().numpy()
 
-    layer = ctx.network.add_deconvolution(input=input_trt,
-                                          num_output_maps=module.out_channels,
-                                          kernel_shape=kernel_size,
-                                          kernel=kernel,
-                                          bias=bias)
+    layer = ctx.network.add_deconvolution(
+        input=input_trt,
+        num_output_maps=module.out_channels,
+        kernel_shape=kernel_size,
+        kernel=kernel,
+        bias=bias)
     layer.stride = stride
     layer.padding = padding
 

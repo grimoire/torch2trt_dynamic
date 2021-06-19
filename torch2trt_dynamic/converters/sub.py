@@ -27,6 +27,7 @@ def convert_sub(ctx):
 
 
 class Sub(torch.nn.Module):
+
     def __init__(self):
         super(Sub, self).__init__()
 
@@ -41,6 +42,7 @@ def test_sub_basic():
 
 
 class ISub(torch.nn.Module):
+
     def __init__(self):
         super(ISub, self).__init__()
 
@@ -56,6 +58,7 @@ def test_sub_isub():
 
 
 class TorchSub(torch.nn.Module):
+
     def __init__(self):
         super(TorchSub, self).__init__()
 
@@ -70,6 +73,7 @@ def test_torch_sub():
 
 
 class RSubInt(torch.nn.Module):
+
     def __init__(self):
         super(RSubInt, self).__init__()
 
@@ -83,6 +87,7 @@ def test_rsub_int():
 
 
 class RSubFloat(torch.nn.Module):
+
     def __init__(self):
         super(RSubFloat, self).__init__()
 

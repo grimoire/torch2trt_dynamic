@@ -27,8 +27,8 @@ def create_meshgrid_plugin(layer_name,
                                 trt.PluginFieldType.FLOAT32)
     pfc.append(pf_starts)
 
-    pf_strides = trt.PluginField('strides', np.array(strides,
-                                                     dtype=np.float32),
+    pf_strides = trt.PluginField('strides',
+                                 np.array(strides, dtype=np.float32),
                                  trt.PluginFieldType.FLOAT32)
     pfc.append(pf_strides)
 

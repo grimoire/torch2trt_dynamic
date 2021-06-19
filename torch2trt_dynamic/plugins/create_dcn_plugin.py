@@ -61,8 +61,8 @@ def create_dcn_plugin(layer_name,
                                  trt.PluginFieldType.INT32)
     pfc.append(pf_padding)
 
-    pf_dilation = trt.PluginField('dilation', np.array(dilation,
-                                                       dtype=np.int32),
+    pf_dilation = trt.PluginField('dilation',
+                                  np.array(dilation, dtype=np.int32),
                                   trt.PluginFieldType.INT32)
     pfc.append(pf_dilation)
 
@@ -136,8 +136,8 @@ def create_dcnv2_plugin(layer_name,
                                  trt.PluginFieldType.INT32)
     pfc.append(pf_padding)
 
-    pf_dilation = trt.PluginField('dilation', np.array(dilation,
-                                                       dtype=np.int32),
+    pf_dilation = trt.PluginField('dilation',
+                                  np.array(dilation, dtype=np.int32),
                                   trt.PluginFieldType.INT32)
     pfc.append(pf_dilation)
 

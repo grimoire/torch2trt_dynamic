@@ -1,7 +1,8 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
+import torch
+from torch2trt_dynamic.torch2trt_dynamic import get_arg, tensorrt_converter
 
 from .add import convert_add
-from .cast_type import *
+from .cast_type import convert_bool, convert_float, convert_int
 from .mul import convert_mul
 
 
@@ -10,7 +11,6 @@ def convert_ones_like(ctx):
     input = ctx.method_args[0]
     dtype = get_arg(ctx, 'dtype', pos=1, default=torch.float32)
     output = ctx.method_return
-    input_trt = trt_(ctx.network, input)
 
     old_method_args = ctx.method_args
     old_method_kwargs = ctx.method_kwargs

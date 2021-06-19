@@ -1,5 +1,6 @@
-from ..module_test import add_module_test
-from ..torch2trt_dynamic import *
+import tensorrt as trt
+
+from ..torch2trt_dynamic import tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.floor_divide')

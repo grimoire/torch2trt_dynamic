@@ -1,7 +1,6 @@
 import numpy as np
 import tensorrt as trt
 import torch
-
 from torch2trt_dynamic.module_test import add_module_test
 from torch2trt_dynamic.torch2trt_dynamic import (tensor_trt_get_shape_trt,
                                                  tensorrt_converter, trt_)
@@ -58,6 +57,7 @@ def convert_addcmul(ctx):
 
 
 class AddcmulTestModule(torch.nn.Module):
+
     def __init__(self, value):
         super(AddcmulTestModule, self).__init__()
         self.value = value

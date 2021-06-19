@@ -1,35 +1,8 @@
-from os import WIFEXITED
-
+import numpy as np
 import tensorrt as trt
 
-from ..torch2trt_dynamic import *
-
-# from torch2trt_dynamic.plugins import *
-
-# @tensorrt_converter('torch.nn.LayerNorm.forward')
-# def convert_LayerNorm(ctx):
-#     module = ctx.method_args[0]
-
-#     normalized_shape = module.normalized_shape
-#     weight = module.weight.detach().cpu().numpy()
-#     bias = module.bias.detach().cpu().numpy()
-#     eps = module.eps
-
-#     input = ctx.method_args[1]
-#     input_trt = trt_(ctx.network, input)
-#     output = ctx.method_return
-
-#     plugin = create_layernorm_plugin("layernorm_" + str(id(module)),
-#                                      normalized_shape=normalized_shape,
-#                                      W=weight,
-#                                      B=bias,
-#                                      eps=eps
-#                                      )
-
-#     custom_layer = ctx.network.add_plugin_v2(
-#         inputs=[input_trt], plugin=plugin)
-
-#     output._trt = custom_layer.get_output(0)
+from ..torch2trt_dynamic import (tensor_trt_get_shape_trt, tensorrt_converter,
+                                 torch_dim_to_trt_axes, trt_)
 
 
 @tensorrt_converter('torch.nn.LayerNorm.forward')

@@ -1,7 +1,6 @@
 import numpy as np
 import tensorrt as trt
 import torch
-
 from torch2trt_dynamic.module_test import add_module_test
 from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
@@ -33,8 +32,8 @@ def convert_BatchNorm1d(ctx):
     layer = ctx.network.add_shuffle(input_trt)
     layer.set_input(1, new_input_shape_trt)
 
-    layer = ctx.network.add_scale(layer.get_output(0), trt.ScaleMode.CHANNEL,
-                                  bias, scale, power)
+    layer = ctx.network.add_scale(
+        layer.get_output(0), trt.ScaleMode.CHANNEL, bias, scale, power)
 
     # reshape back to 1D
     conv_out_trt = layer.get_output(0)

@@ -54,6 +54,7 @@ def convert_view(ctx):
 
 
 class View(torch.nn.Module):
+
     def __init__(self, *dims):
         super(View, self).__init__()
         self.dims = dims

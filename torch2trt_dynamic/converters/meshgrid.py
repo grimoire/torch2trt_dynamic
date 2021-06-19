@@ -14,8 +14,8 @@ def convert_meshgrid(ctx):
 
     num_inputs = len(input_list)
 
-    plugin = create_meshgrid_plugin('adaptive_meshgrid_' + str(id(input)),
-                                    num_inputs=num_inputs)
+    plugin = create_meshgrid_plugin(
+        'adaptive_meshgrid_' + str(id(input)), num_inputs=num_inputs)
 
     layer = ctx.network.add_plugin_v2(inputs=input_list_trt, plugin=plugin)
 

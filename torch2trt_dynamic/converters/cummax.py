@@ -15,9 +15,8 @@ def convert_cummax(ctx):
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
 
-    plugin = create_torchcummaxmin_plugin('cummax_' + str(id(input)),
-                                          dim=dim,
-                                          cum_type=cum_type)
+    plugin = create_torchcummaxmin_plugin(
+        'cummax_' + str(id(input)), dim=dim, cum_type=cum_type)
 
     custom_layer = ctx.network.add_plugin_v2(inputs=[input_trt], plugin=plugin)
 

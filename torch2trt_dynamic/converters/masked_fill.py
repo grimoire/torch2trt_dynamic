@@ -1,5 +1,4 @@
-from ..module_test import add_module_test
-from ..torch2trt_dynamic import *
+from ..torch2trt_dynamic import get_arg, tensorrt_converter
 
 
 @tensorrt_converter('torch.masked_fill', is_real=False)

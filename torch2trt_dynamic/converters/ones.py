@@ -1,6 +1,8 @@
 from collections.abc import Iterable
 
-from torch2trt_dynamic.torch2trt_dynamic import *
+import tensorrt as trt
+import torch
+from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.ones')

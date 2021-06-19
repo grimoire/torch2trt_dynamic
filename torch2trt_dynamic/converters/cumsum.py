@@ -26,9 +26,8 @@ def convert_cumsum(ctx):
     else:
         input_trt = trt_(ctx.network, input)
 
-    plugin = create_torchcum_plugin('cumsum_' + str(id(input)),
-                                    dim=dim,
-                                    cum_type=cum_type)
+    plugin = create_torchcum_plugin(
+        'cumsum_' + str(id(input)), dim=dim, cum_type=cum_type)
 
     custom_layer = ctx.network.add_plugin_v2(inputs=[input_trt], plugin=plugin)
 

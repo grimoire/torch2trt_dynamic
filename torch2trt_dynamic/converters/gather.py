@@ -13,10 +13,10 @@ def convert_gather(ctx):
     inputs_trt = trt_(ctx.network, inputs)
     index_trt = trt_(ctx.network, index)
 
-    plugin = create_torchgather_plugin('torch_gather_' + str(id(inputs)),
-                                       dim=dim)
+    plugin = create_torchgather_plugin(
+        'torch_gather_' + str(id(inputs)), dim=dim)
 
-    layer = ctx.network.add_plugin_v2(inputs=[inputs_trt, index_trt],
-                                      plugin=plugin)
+    layer = ctx.network.add_plugin_v2(
+        inputs=[inputs_trt, index_trt], plugin=plugin)
 
     output._trt = layer.get_output(0)

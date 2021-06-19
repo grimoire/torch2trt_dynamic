@@ -1,5 +1,8 @@
+import tensorrt as trt
+import torch
+
 from ..module_test import add_module_test
-from ..torch2trt_dynamic import *
+from ..torch2trt_dynamic import tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.div')
@@ -31,6 +34,7 @@ def convert_rdiv(ctx):
 
 
 class Div(torch.nn.Module):
+
     def __init__(self):
         super(Div, self).__init__()
 
@@ -45,6 +49,7 @@ def test_div_basic():
 
 
 class IDiv(torch.nn.Module):
+
     def __init__(self):
         super(IDiv, self).__init__()
 
@@ -60,6 +65,7 @@ def test_div_idiv():
 
 
 class TorchDiv(torch.nn.Module):
+
     def __init__(self):
         super(TorchDiv, self).__init__()
 
@@ -74,6 +80,7 @@ def test_div_torchdiv():
 
 
 class RDivInt(torch.nn.Module):
+
     def __init__(self):
         super(RDivInt, self).__init__()
 
@@ -87,6 +94,7 @@ def test_rdiv_int():
 
 
 class RDivFloat(torch.nn.Module):
+
     def __init__(self):
         super(RDivFloat, self).__init__()
 

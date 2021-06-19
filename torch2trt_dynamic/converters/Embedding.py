@@ -37,10 +37,10 @@ def convert_embedding(ctx):
     input_trt = trt_(ctx.network, input)
     weight_trt = trt_(ctx.network, weight)
 
-    plugin = create_torchembedding_plugin('torch_gather_' + str(id(input)),
-                                          weight=weight)
+    plugin = create_torchembedding_plugin(
+        'torch_gather_' + str(id(input)), weight=weight)
 
-    layer = ctx.network.add_plugin_v2(inputs=[input_trt, weight_trt],
-                                      plugin=plugin)
+    layer = ctx.network.add_plugin_v2(
+        inputs=[input_trt, weight_trt], plugin=plugin)
 
     output._trt = layer.get_output(0)

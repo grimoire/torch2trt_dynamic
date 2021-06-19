@@ -1,6 +1,5 @@
 import tensorrt as trt
 import torch
-
 from torch2trt_dynamic.module_test import add_module_test
 from torch2trt_dynamic.torch2trt_dynamic import (tensorrt_converter,
                                                  torch_dtype_to_trt, trt_)

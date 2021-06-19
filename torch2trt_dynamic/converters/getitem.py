@@ -1,9 +1,11 @@
 from collections.abc import Iterable
 
+import tensorrt as trt
 import torch
 
 from ..module_test import add_module_test
-from ..torch2trt_dynamic import *
+from ..torch2trt_dynamic import (tensor_trt_get_shape_trt, tensorrt_converter,
+                                 trt_)
 from .size import IntWarper, get_intwarper_trt
 
 
@@ -96,7 +98,7 @@ def convert_tensor_getitem(ctx):
         if input_dim >= len(input_trt.shape):
             break
 
-        ### slice shape and trt slice shape
+        # slice shape and trt slice shape
         input_size = int(input.shape[input_dim])
         if isinstance(s, slice):
             start, size, stride = slice_to_trt(input_size, s)
@@ -199,20 +201,21 @@ def convert_tensor_getitem(ctx):
         output_trt = ctx.network.add_gather(output_trt, index_tensor_trt,
                                             gidx).get_output(0)
 
-    # Step 4 - Add shuffle layer to insert dimensions for 'None' slices and remove dimensions for 'int' slices
+    # Step 4 - Add shuffle layer to insert dimensions for 'None' slices
+    # and remove dimensions for 'int' slices
 
     if len(erase_dims) + len(add_dims) > 0:
         layer = ctx.network.add_shuffle(output_trt)
-        ## full output shape
+        # full output shape
         out_shape_trt = [
             tensor_trt_get_shape_trt(ctx.network, output_trt, i, 1)
             for i in range(len(input.shape))
         ]
-        ## if slice is None
+        # if slice is None
         for add in add_dims[::-1]:
             out_shape_trt = out_shape_trt[:add] + [one_trt
                                                    ] + out_shape_trt[add:]
-        ## if slice is Int
+        # if slice is Int
         for e in erase_dims:
             out_shape_trt[e] = None
         out_shape_trt = list(filter(lambda x: x is not None, out_shape_trt))
@@ -230,6 +233,7 @@ def convert_tensor_getitem(ctx):
 
 
 class LambdaModule(torch.nn.Module):
+
     def __init__(self, fn):
         super(LambdaModule, self).__init__()
         self.fn = fn

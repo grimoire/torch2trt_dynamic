@@ -1,6 +1,5 @@
 import tensorrt as trt
 import torch
-
 from torch2trt_dynamic.module_test import add_module_test
 from torch2trt_dynamic.torch2trt_dynamic import (slice_shape_trt,
                                                  tensor_trt_get_shape_trt,
@@ -100,6 +99,7 @@ def convert_matmul(ctx):
 
 
 class MatmulTest(torch.nn.Module):
+
     def __init__(self):
         super(MatmulTest, self).__init__()
 

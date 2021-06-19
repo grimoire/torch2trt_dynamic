@@ -45,18 +45,19 @@ def convert_deform_conv2d(ctx):
 
     bias = bias.detach().cpu().numpy()
 
-    plugin = create_dcn_plugin('dcn_' + str(id(input)),
-                               out_channels=out_channels,
-                               kernel_size=kernel_size,
-                               W=kernel,
-                               B=bias,
-                               padding=padding,
-                               stride=stride,
-                               dilation=dilation,
-                               deformable_group=deform_groups,
-                               group=groups)
+    plugin = create_dcn_plugin(
+        'dcn_' + str(id(input)),
+        out_channels=out_channels,
+        kernel_size=kernel_size,
+        W=kernel,
+        B=bias,
+        padding=padding,
+        stride=stride,
+        dilation=dilation,
+        deformable_group=deform_groups,
+        group=groups)
 
-    custom_layer = ctx.network.add_plugin_v2(inputs=[input_trt, offset_trt],
-                                             plugin=plugin)
+    custom_layer = ctx.network.add_plugin_v2(
+        inputs=[input_trt, offset_trt], plugin=plugin)
 
     output._trt = custom_layer.get_output(0)

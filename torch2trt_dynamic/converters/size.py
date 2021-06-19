@@ -1,5 +1,4 @@
 import torch
-
 from torch2trt_dynamic.torch2trt_dynamic import *
 
 
@@ -18,6 +17,7 @@ class IntWarper(int):
 
 
 class ShapeWarper(tuple):
+
     def numel(self):
         return torch.Size(self).numel()
 

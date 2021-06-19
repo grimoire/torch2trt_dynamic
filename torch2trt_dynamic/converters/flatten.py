@@ -1,6 +1,8 @@
-from ..module_test import add_module_test
-from ..torch2trt_dynamic import *
-from .identity import *
+import tensorrt as trt
+import torch
+
+from ..torch2trt_dynamic import get_arg, tensorrt_converter, trt_
+from .identity import convert_identity
 
 
 @tensorrt_converter('torch.Tensor.flatten')
@@ -62,16 +64,15 @@ def convert_flatten(ctx):
                                           [1]).get_output(0)
         mid_trt = ctx.network.add_elementwise(
             mid_trt, other_trt, trt.ElementWiseOperation.PROD).get_output(0)
-    # mid_trt = ctx.network.add_reduce(shape_mid_trt, trt.ReduceOperation.PROD, axes=1, keep_dims=True).get_output(0)
 
     shape_mid_trt = mid_trt
 
     if shape1_trt is None and shape2_trt is None:
         new_shape_trt = shape_mid_trt
-    elif shape1_trt == None:
+    elif shape1_trt is None:
         new_shape_trt = ctx.network.add_concatenation(
             [shape_mid_trt, shape2_trt]).get_output(0)
-    elif shape2_trt == None:
+    elif shape2_trt is None:
         new_shape_trt = ctx.network.add_concatenation(
             [shape1_trt, shape_mid_trt]).get_output(0)
     else:

@@ -1,7 +1,6 @@
 import math
 
 import tensorrt as trt
-
 from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
 
@@ -13,13 +12,6 @@ def convert_gelu(ctx):
     input_trt, b_trt, v1_trt, v0_5_trt, v3_trt = trt_(ctx.network, input,
                                                       0.044715, 1, 0.5, 3)
 
-    # x**3
-    # layer = ctx.network.add_elementwise(input_trt, input_trt,
-    #                                     trt.ElementWiseOperation.PROD)
-    # input_p2_trt = layer.get_output(0)
-    # layer = ctx.network.add_elementwise(input_p2_trt, input_trt,
-    #                                     trt.ElementWiseOperation.PROD)
-    # input_p3_trt = layer.get_output(0)
     layer = ctx.network.add_elementwise(input_trt, v3_trt,
                                         trt.ElementWiseOperation.POW)
     input_p3_trt = layer.get_output(0)

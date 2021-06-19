@@ -1,5 +1,8 @@
+import tensorrt as trt
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 trt_)
 
 
 @tensorrt_converter('torch.nn.functional.max_pool2d')
@@ -9,7 +12,7 @@ def convert_max_pool2d(ctx):
     kernel_size = get_arg(ctx, 'kernel_size', pos=1, default=None)
     stride = get_arg(ctx, 'stride', pos=2, default=None)
     padding = get_arg(ctx, 'padding', pos=3, default=0)
-    dilation = get_arg(ctx, 'dilation', pos=4, default=1)
+    # dilation = get_arg(ctx, 'dilation', pos=4, default=1)
     ceil_mode = get_arg(ctx, 'ceil_mode', pos=5, default=False)
 
     # get input trt tensor (or create constant if it doesn't exist)
@@ -29,9 +32,8 @@ def convert_max_pool2d(ctx):
     if not isinstance(padding, tuple):
         padding = (padding, ) * 2
 
-    layer = ctx.network.add_pooling(input=input_trt,
-                                    type=trt.PoolingType.MAX,
-                                    window_size=kernel_size)
+    layer = ctx.network.add_pooling(
+        input=input_trt, type=trt.PoolingType.MAX, window_size=kernel_size)
 
     layer.stride = stride
     layer.padding = padding
@@ -45,16 +47,12 @@ def convert_max_pool2d(ctx):
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 6)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 5, 7)])
 def test_MaxPool2d_without_ceil_mode():
-    return torch.nn.MaxPool2d(kernel_size=3,
-                              stride=2,
-                              padding=1,
-                              ceil_mode=False)
+    return torch.nn.MaxPool2d(
+        kernel_size=3, stride=2, padding=1, ceil_mode=False)
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 4, 6)])
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 5, 7)])
 def test_MaxPool2d_with_ceil_mode():
-    return torch.nn.MaxPool2d(kernel_size=3,
-                              stride=2,
-                              padding=1,
-                              ceil_mode=True)
+    return torch.nn.MaxPool2d(
+        kernel_size=3, stride=2, padding=1, ceil_mode=True)

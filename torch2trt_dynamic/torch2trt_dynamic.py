@@ -338,6 +338,7 @@ def attach_converter(ctx, method, converter, method_str):
 
 class ConversionHook(object):
     """Attaches TensorRT converter to PyTorch method call"""
+
     def __init__(self, ctx, method, converter):
         self.ctx = ctx
         self.method_str = method
@@ -369,6 +370,7 @@ class ConversionHook(object):
 
 
 class ConversionContext(object):
+
     def __init__(self, network, converters=CONVERTERS):
         self.network = network
         self.lock = False
@@ -432,6 +434,7 @@ class ConversionContext(object):
 
 
 class TRTModule(torch.nn.Module):
+
     def __init__(self, engine=None, input_names=None, output_names=None):
         super(TRTModule, self).__init__()
         self._register_state_dict_hook(TRTModule._on_state_dict)
@@ -593,6 +596,7 @@ def torch2trt_dynamic(module,
 
 
 def tensorrt_converter(method, is_real=True):
+
     def register_converter(converter):
         CONVERTERS[method] = {'converter': converter, 'is_real': is_real}
         return converter

@@ -1,6 +1,6 @@
 import tensorrt as trt
-
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (convert_with_args,
+                                                 tensorrt_converter, trt_)
 
 from .permute import convert_permute
 
@@ -14,7 +14,8 @@ def set_gate_parameter(func, index, gate_type_list, hidden_size, param_i,
              param_h[i * hidden_size:(i + 1) * hidden_size].copy())
 
 
-# from https://github.com/grimoire/torch2trt_dynamic/issues/19#issuecomment-817265423
+# modify from
+# https://github.com/grimoire/torch2trt_dynamic/issues/19#issuecomment-817265423
 # Thank you @iAlexKai
 @tensorrt_converter('torch.nn.GRU.forward')
 def convert_GRU(ctx):
@@ -62,22 +63,24 @@ def convert_GRU(ctx):
 
         rela_index = 2 * i if module.bidirectional is True else i
 
-        set_gate_parameter(layer.set_weights_for_gate,
-                           rela_index,
-                           gate_type_list,
-                           hidden_size=hidden_size,
-                           param_i=iw,
-                           param_h=hw)
+        set_gate_parameter(
+            layer.set_weights_for_gate,
+            rela_index,
+            gate_type_list,
+            hidden_size=hidden_size,
+            param_i=iw,
+            param_h=hw)
 
         ib = getattr(module, 'bias_ih_l%s' % i).detach().cpu().numpy()
         hb = getattr(module, 'bias_hh_l%s' % i).detach().cpu().numpy()
 
-        set_gate_parameter(layer.set_bias_for_gate,
-                           rela_index,
-                           gate_type_list,
-                           hidden_size=hidden_size,
-                           param_i=ib,
-                           param_h=hb)
+        set_gate_parameter(
+            layer.set_bias_for_gate,
+            rela_index,
+            gate_type_list,
+            hidden_size=hidden_size,
+            param_i=ib,
+            param_h=hb)
 
         if module.bidirectional is True:
             # ================reverse=====================
@@ -86,24 +89,26 @@ def convert_GRU(ctx):
             hw_r = getattr(module,
                            'weight_hh_l%s_reverse' % i).detach().cpu().numpy()
 
-            set_gate_parameter(layer.set_weights_for_gate,
-                               2 * i + 1,
-                               gate_type_list,
-                               hidden_size=hidden_size,
-                               param_i=iw_r,
-                               param_h=hw_r)
+            set_gate_parameter(
+                layer.set_weights_for_gate,
+                2 * i + 1,
+                gate_type_list,
+                hidden_size=hidden_size,
+                param_i=iw_r,
+                param_h=hw_r)
 
             ib_r = getattr(module,
                            'bias_ih_l%s_reverse' % i).detach().cpu().numpy()
             hb_r = getattr(module,
                            'bias_hh_l%s_reverse' % i).detach().cpu().numpy()
 
-            set_gate_parameter(layer.set_bias_for_gate,
-                               2 * i + 1,
-                               gate_type_list,
-                               hidden_size=hidden_size,
-                               param_i=ib_r,
-                               param_h=hb_r)
+            set_gate_parameter(
+                layer.set_bias_for_gate,
+                2 * i + 1,
+                gate_type_list,
+                hidden_size=hidden_size,
+                param_i=ib_r,
+                param_h=hb_r)
 
     gru_output_0 = layer.get_output(0)
     gru_output_1 = layer.get_output(1)

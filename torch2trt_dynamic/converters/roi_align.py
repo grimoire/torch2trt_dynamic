@@ -1,5 +1,4 @@
 import torchvision.ops
-
 from torch2trt_dynamic.plugins import *
 from torch2trt_dynamic.torch2trt_dynamic import *
 
@@ -19,16 +18,17 @@ def convert_roi_align(ctx):
     input_trt = trt_(ctx.network, input)
     boxes_offset_trt, boxes_trt = trt_(ctx.network, 0.5 / spatial_scale, boxes)
 
-    plugin = create_roiextractor_plugin('roi_align_' + str(id(boxes)),
-                                        out_size=output_size,
-                                        sample_num=sampling_ratio,
-                                        featmap_strides=[1. / spatial_scale],
-                                        roi_scale_factor=1.,
-                                        finest_scale=56,
-                                        aligned=1 if aligned else 0)
+    plugin = create_roiextractor_plugin(
+        'roi_align_' + str(id(boxes)),
+        out_size=output_size,
+        sample_num=sampling_ratio,
+        featmap_strides=[1. / spatial_scale],
+        roi_scale_factor=1.,
+        finest_scale=56,
+        aligned=1 if aligned else 0)
 
-    custom_layer = ctx.network.add_plugin_v2(inputs=[boxes_trt, input_trt],
-                                             plugin=plugin)
+    custom_layer = ctx.network.add_plugin_v2(
+        inputs=[boxes_trt, input_trt], plugin=plugin)
 
     output._trt = custom_layer.get_output(0)
 

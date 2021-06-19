@@ -1,5 +1,7 @@
-from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+import tensorrt as trt
+import torch
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 trt_)
 
 from .squeeze import convert_squeeze
 from .unsqueeze import convert_unsqueeze
@@ -14,7 +16,7 @@ def convert_max_pool1d(ctx):
     kernel_size = get_arg(ctx, 'kernel_size', pos=1, default=None)
     stride = get_arg(ctx, 'stride', pos=2, default=None)
     padding = get_arg(ctx, 'padding', pos=3, default=0)
-    dilation = get_arg(ctx, 'dilation', pos=4, default=1)
+    # dilation = get_arg(ctx, 'dilation', pos=4, default=1)
     ceil_mode = get_arg(ctx, 'ceil_mode', pos=5, default=False)
 
     kernel_size = (kernel_size, 1)
@@ -33,9 +35,8 @@ def convert_max_pool1d(ctx):
     # pool2d
     input_trt = trt_(ctx.network, unsqueeze_input)
 
-    layer = ctx.network.add_pooling(input=input_trt,
-                                    type=trt.PoolingType.MAX,
-                                    window_size=kernel_size)
+    layer = ctx.network.add_pooling(
+        input=input_trt, type=trt.PoolingType.MAX, window_size=kernel_size)
 
     layer.stride = stride
     layer.padding = padding
@@ -43,11 +44,12 @@ def convert_max_pool1d(ctx):
     if ceil_mode:
         layer.padding_mode = trt.PaddingMode.EXPLICIT_ROUND_UP
 
-    pool2d_output = torch.nn.functional.max_pool2d(unsqueeze_input,
-                                                   kernel_size=kernel_size,
-                                                   stride=stride,
-                                                   padding=padding,
-                                                   ceil_mode=ceil_mode)
+    pool2d_output = torch.nn.functional.max_pool2d(
+        unsqueeze_input,
+        kernel_size=kernel_size,
+        stride=stride,
+        padding=padding,
+        ceil_mode=ceil_mode)
     pool2d_output._trt = layer.get_output(0)
 
     # squeeze -1

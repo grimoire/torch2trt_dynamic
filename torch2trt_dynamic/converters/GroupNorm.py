@@ -15,9 +15,8 @@ def convert_GroupNorm(ctx):
     num_groups = module.num_groups
     eps = module.eps
 
-    plugin = create_groupnorm_plugin('groupnorm_' + str(id(module)),
-                                     num_groups=num_groups,
-                                     eps=eps)
+    plugin = create_groupnorm_plugin(
+        'groupnorm_' + str(id(module)), num_groups=num_groups, eps=eps)
 
     custom_layer = ctx.network.add_plugin_v2(
         inputs=[input_trt, weight_trt, bias_trt], plugin=plugin)

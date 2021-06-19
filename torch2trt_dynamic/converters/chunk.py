@@ -115,6 +115,7 @@ def convert_chunk(ctx):
 
 
 class TorchChunk(torch.nn.Module):
+
     def __init__(self, *args, **kwargs):
         super(TorchChunk, self).__init__()
         self.args = args
@@ -125,6 +126,7 @@ class TorchChunk(torch.nn.Module):
 
 
 class TensorChunk(torch.nn.Module):
+
     def __init__(self, *args, **kwargs):
         super(TensorChunk, self).__init__()
         self.args = args

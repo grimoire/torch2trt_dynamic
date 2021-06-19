@@ -3,11 +3,10 @@ import os
 import shutil
 from distutils.cmd import Command
 
+from build import build
 from setuptools import find_packages, setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
-
-from build import build
 
 package_data = {}
 
@@ -129,14 +128,15 @@ class CleanCommand(Command):
             os.system(script)
 
 
-setup(name='torch2trt_dynamic',
-      version='0.4.0',
-      description='An easy to use PyTorch to TensorRT converter' +
-      ' with dynamic shape support',
-      cmdclass={
-          'install': InstallCommand,
-          'clean': CleanCommand,
-          'develop': DevelopCommand,
-      },
-      packages=find_packages(),
-      package_data=package_data)
+setup(
+    name='torch2trt_dynamic',
+    version='0.4.0',
+    description='An easy to use PyTorch to TensorRT converter' +
+    ' with dynamic shape support',
+    cmdclass={
+        'install': InstallCommand,
+        'clean': CleanCommand,
+        'develop': DevelopCommand,
+    },
+    packages=find_packages(),
+    package_data=package_data)

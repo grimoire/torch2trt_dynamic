@@ -1,5 +1,6 @@
-from ..module_test import add_module_test
-from ..torch2trt_dynamic import *
+import torch
+
+from ..torch2trt_dynamic import get_arg, tensorrt_converter
 from .Linear import convert_Linear
 
 

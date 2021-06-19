@@ -1,9 +1,12 @@
+import tensorrt as trt
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 torch_dim_to_trt_axes, trt_)
 
-from .flatten import *
-from .squeeze import *
-from .topk import *
+from .flatten import convert_flatten
+from .squeeze import convert_squeeze
+from .topk import convert_topk
 from .unary import UnaryModule
 
 
@@ -88,16 +91,6 @@ def __convert_max_reduce(ctx):
     ctx.method_args = old_args
     ctx.method_kwargs = old_kwargs
 
-    # if support_dynamic_shape:
-    #     dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(0, input.ndim)))
-    # else:
-    #     dim = get_arg(ctx, 'dim', pos=1, default=tuple(range(1, input.ndim)))
-    # keepdim = get_arg(ctx, 'keepdim', pos=2, default=False)
-    # input_trt= trt_(ctx.network, input)
-    # output_val = ctx.method_return
-    # layer = ctx.network.add_reduce(input_trt,  trt.ReduceOperation.MAX, torch_dim_to_trt_axes(dim), keepdim)
-    # output_val[0]._trt = layer.get_output(0)
-
 
 @tensorrt_converter('torch.max')
 @tensorrt_converter('torch.Tensor.max')
@@ -127,6 +120,7 @@ def test_max_reduce_dim1_keepdim():
 
 
 class MaxElementwise(torch.nn.Module):
+
     def forward(self, x, y):
         return torch.max(x, y)
 

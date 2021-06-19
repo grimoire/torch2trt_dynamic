@@ -1,6 +1,8 @@
-from ..torch2trt_dynamic import *
+import torch
+
+from ..torch2trt_dynamic import get_arg, tensorrt_converter
 from .add import convert_add
-from .cast_type import *
+from .cast_type import convert_bool, convert_float, convert_int
 from .mul import convert_mul
 
 
@@ -10,7 +12,6 @@ def convert_full_like(ctx):
     fill_value = get_arg(ctx, 'fill_value', pos=1, default=0)
     dtype = get_arg(ctx, 'dtype', pos=3, default=torch.float32)
     output = ctx.method_return
-    input_trt = trt_(ctx.network, input)
 
     old_method_args = ctx.method_args
     old_method_kwargs = ctx.method_kwargs

@@ -28,6 +28,7 @@ def convert_pow(ctx):
 
 
 class Pow(torch.nn.Module):
+
     def __init__(self):
         super(Pow, self).__init__()
 
@@ -56,6 +57,7 @@ def test_pow_basic():
 
 
 class TorchPow(torch.nn.Module):
+
     def __init__(self):
         super(TorchPow, self).__init__()
 
@@ -70,6 +72,7 @@ def test_torch_pow():
 
 
 class RpowInt(torch.nn.Module):
+
     def __init__(self):
         super(RpowInt, self).__init__()
 
@@ -83,6 +86,7 @@ def test_rpow_int():
 
 
 class RpowFloat(torch.nn.Module):
+
     def __init__(self):
         super(RpowFloat, self).__init__()
 

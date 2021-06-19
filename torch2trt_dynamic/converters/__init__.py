@@ -31,40 +31,42 @@ from .Conv1d import convert_Conv1d
 from .Conv2d import convert_Conv2d
 from .conv2d import convert_conv2d
 from .ConvTranspose1d import convert_ConvTranspose1d
-from .ConvTranspose2d import *
-from .div import *
-from .exview import *
-from .flatten import *
+from .ConvTranspose2d import convert_ConvTranspose2d
+from .div import convert_div, convert_rdiv
+from .exview import convert_exview
+from .flatten import convert_flatten
 from .floor_divide import convert_floor_div, convert_rfloor_div
 from .full import convert_full
 from .full_like import convert_full_like
 from .gelu import convert_gelu
-from .getitem import *
+from .getitem import convert_tensor_getitem
 from .GRU import convert_GRU
-from .identity import *
-from .Identity import *
-from .index_select import *
-from .instance_norm import *
-from .interpolate_custom import *
-from .LayerNorm import *
-from .Linear import *
+from .identity import convert_identity
+from .Identity import convert_Identity
+from .index_select import convert_index_select
+from .instance_norm import convert_instance_norm
+from .interpolate_custom import convert_interpolate
+from .LayerNorm import convert_LayerNorm
+from .Linear import convert_Linear
 from .linear import convert_linear
 from .linspace import convert_linspace
-from .logical import *
-from .LogSoftmax import *
-from .masked_fill import *
-from .matmul import *
-from .max import *
+from .logical import (convert_and, convert_equal, convert_greater,
+                      convert_greaterequal, convert_less, convert_lessequal,
+                      convert_ne, convert_or, convert_xor)
+from .LogSoftmax import convert_LogSoftmax
+from .masked_fill import convert_masked_fill
+from .matmul import convert_matmul
+from .max import convert_max
 from .max_pool1d import convert_max_pool1d
-from .max_pool2d import *
-from .mean import *
-from .min import *
+from .max_pool2d import convert_max_pool2d
+from .mean import convert_mean
+from .min import convert_min
 from .mod import convert_mod
-from .mul import *
+from .mul import convert_mul
 from .narrow import convert_narrow
 from .new_ones import convert_new_ones
 from .new_zeros import convert_new_zeros
-from .normalize import *
+from .normalize import convert_normalize
 from .numel import convert_numel
 from .ones import convert_ones
 from .ones_like import convert_ones_like
@@ -151,7 +153,84 @@ __all__ += ['convert_Conv2d']
 __all__ += ['convert_conv2d']
 # ConvTranspose1d
 __all__ += ['convert_ConvTranspose1d']
-
+# ConvTranspose2d
+__all__ += ['convert_ConvTranspose2d']
+# div
+__all__ += ['convert_div', 'convert_rdiv']
+# exview
+__all__ += ['convert_exview']
+# flatten
+__all__ += ['convert_flatten']
+# floor_divide
+__all__ += ['convert_floor_div', 'convert_rfloor_div']
+# full
+__all__ += ['convert_full']
+# full_like
+__all__ += ['convert_full_like']
+# gelu
+__all__ += ['convert_gelu']
+# getitem
+__all__ += ['convert_tensor_getitem']
+# GRU
+__all__ += ['convert_GRU']
+# identity
+__all__ += ['convert_identity']
+# Identity
+__all__ += ['convert_Identity']
+# index_select
+__all__ += ['convert_index_select']
+# instance_norm
+__all__ += ['convert_instance_norm']
+# interpolate_custom
+__all__ += ['convert_interpolate']
+# LayerNorm
+__all__ += ['convert_LayerNorm']
+# Linear
+__all__ += ['convert_Linear']
+# linear
+__all__ += ['convert_linear']
+# linspace
+__all__ += ['convert_linspace']
+# logical
+__all__ += [
+    'convert_and', 'convert_equal', 'convert_greater', 'convert_greaterequal',
+    'convert_less', 'convert_lessequal', 'convert_ne', 'convert_or',
+    'convert_xor'
+]
+# LogSoftmax
+__all__ += ['convert_LogSoftmax']
+# masked_fill
+__all__ += ['convert_masked_fill']
+# matmul
+__all__ += ['convert_matmul']
+# max
+__all__ += ['convert_max']
+# max_pool1d
+__all__ += ['convert_max_pool1d']
+# max_pool2d
+__all__ += ['convert_max_pool2d']
+# mean
+__all__ += ['convert_mean']
+# min
+__all__ += ['convert_min']
+# mod
+__all__ += ['convert_mod']
+# mul
+__all__ += ['convert_mul']
+# narrow
+__all__ += ['convert_narrow']
+# new_ones
+__all__ += ['convert_new_ones']
+# new_zeros
+__all__ += ['convert_new_zeros']
+# normalize
+__all__ += ['convert_normalize']
+# numel
+__all__ += ['convert_numel']
+# ones
+__all__ += ['convert_ones']
+# ones_like
+__all__ += ['convert_ones_like']
 try:
     # custom plugin support
     from .adaptive_avg_pool2d import convert_adaptive_avg_pool2d

@@ -1,7 +1,9 @@
+import tensorrt as trt
 import torch
 
 from ..module_test import add_module_test
-from ..torch2trt_dynamic import *
+from ..torch2trt_dynamic import (get_arg, tensor_trt_get_shape_trt,
+                                 tensorrt_converter, trt_)
 from .size import IntWarper
 
 
@@ -86,6 +88,7 @@ def convert_interpolate(ctx):
 
 
 class InterpolateTest(torch.nn.Module):
+
     def __init__(self, size=None, scale_factor=None, mode='nearest'):
         super(InterpolateTest, self).__init__()
         self.size = size
@@ -96,11 +99,12 @@ class InterpolateTest(torch.nn.Module):
         align_corners = None
         if (self.mode != 'nearest'):
             align_corners = True
-        return torch.nn.functional.interpolate(x,
-                                               size=self.size,
-                                               scale_factor=self.scale_factor,
-                                               mode=self.mode,
-                                               align_corners=align_corners)
+        return torch.nn.functional.interpolate(
+            x,
+            size=self.size,
+            scale_factor=self.scale_factor,
+            mode=self.mode,
+            align_corners=align_corners)
 
 
 @add_module_test(torch.float32, torch.device('cuda'), [(1, 2, 3, 4, 6)])

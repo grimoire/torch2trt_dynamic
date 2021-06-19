@@ -9,6 +9,7 @@ else:
 
 
 class TensorBatchDataset():
+
     def __init__(self, tensors):
         self.tensors = tensors
 
@@ -20,6 +21,7 @@ class TensorBatchDataset():
 
 
 class DatasetCalibrator(trt.IInt8Calibrator):
+
     def __init__(self,
                  names,
                  profile,
@@ -41,9 +43,9 @@ class DatasetCalibrator(trt.IInt8Calibrator):
             inputs = [inputs]
         for name, tensor in zip(names, inputs):
             size = tuple(profile.get_shape(name)[1])
-            buf = torch.zeros(size=size,
-                              dtype=tensor.dtype,
-                              device=tensor.device).contiguous()
+            buf = torch.zeros(
+                size=size, dtype=tensor.dtype,
+                device=tensor.device).contiguous()
             self.buffers.append(buf)
 
         self.count = 0

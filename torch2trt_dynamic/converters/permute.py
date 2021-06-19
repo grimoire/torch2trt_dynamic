@@ -27,6 +27,7 @@ def convert_permute(ctx):
 
 
 class Permute(torch.nn.Module):
+
     def __init__(self, *args):
         super(Permute, self).__init__()
         self.args = args

@@ -1,5 +1,8 @@
+import tensorrt as trt
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 trt_)
 
 
 @tensorrt_converter('torch.mean')
@@ -35,6 +38,7 @@ def convert_mean(ctx):
 
 
 class Mean(torch.nn.Module):
+
     def __init__(self, dim, keepdim):
         super(Mean, self).__init__()
         self.dim = dim
