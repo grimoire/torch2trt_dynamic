@@ -1,5 +1,7 @@
-from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+import torch
+
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 trt_)
 
 
 @tensorrt_converter('torch.Tensor.unsqueeze')
@@ -35,10 +37,10 @@ def convert_unsqueeze(ctx):
                                            slice2_size,
                                            slice2_stride).get_output(0)
 
-    if shape1_trt == None:
+    if shape1_trt is None:
         new_shape_trt = ctx.network.add_concatenation(
             [unsqueeze_trt, shape2_trt]).get_output(0)
-    elif shape2_trt == None:
+    elif shape2_trt is None:
         new_shape_trt = ctx.network.add_concatenation(
             [shape1_trt, unsqueeze_trt]).get_output(0)
     else:
