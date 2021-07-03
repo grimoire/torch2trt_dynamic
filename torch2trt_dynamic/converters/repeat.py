@@ -7,6 +7,8 @@ from torch2trt_dynamic.torch2trt_dynamic import (get_arg, slice_shape_trt,
 
 
 def _unsqueeze_input(ctx, input_trt, dim):
+    if dim == len(input_trt.shape):
+        return input_trt
     ones_trt = trt_(ctx.network,
                     torch.ones(dim - len(input_trt.shape), dtype=torch.int32))
     input_shape_trt = tensor_trt_get_shape_trt(ctx.network, input_trt)
@@ -48,7 +50,7 @@ def convert_repeat(ctx):
     output = ctx.method_return
 
     input_trt = trt_(ctx.network, input)
-
+    input_trt = _unsqueeze_input(ctx, input_trt, len(repeats))
     # compute output shape
     input_shape_trt = tensor_trt_get_shape_trt(ctx.network, input_trt)
     repeat_times_trt = [trt_(ctx.network, rep) for rep in repeats]
