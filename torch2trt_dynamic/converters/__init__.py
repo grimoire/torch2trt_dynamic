@@ -45,7 +45,7 @@ from .identity import *
 from .Identity import *
 from .index_select import *
 from .instance_norm import *
-from .interpolate_custom import *
+from .interpolate_custom import convert_interpolate
 from .LayerNorm import *
 from .Linear import *
 from .linear import convert_linear
@@ -79,6 +79,7 @@ from .relu import *
 from .ReLU import *
 from .relu6 import *
 from .ReLU6 import *
+from .repeat import convert_repeat, convert_expand, convert_expand_as
 from .sigmoid import *
 from .size import *
 from .softmax import *
@@ -95,12 +96,13 @@ from .to import convert_Tensor_to
 from .topk import *
 from .transpose import *
 from .unary import *
-from .unsqueeze import *
+from .unsqueeze import convert_unsqueeze
 from .view import *
 from .view_as import *
 from .where import convert_Tensor_where, convert_where
 from .zeros import convert_zeros
 from .zeros_like import convert_zeros_like
+from .flip import convert_flip
 
 __all__ = []
 # activation
@@ -151,6 +153,14 @@ __all__ += ['convert_Conv2d']
 __all__ += ['convert_conv2d']
 # ConvTranspose1d
 __all__ += ['convert_ConvTranspose1d']
+# repeat
+__all__ += ['convert_repeat', 'convert_expand', 'convert_expand_as']
+# interpolate_custom
+__all__ += ['convert_interpolate']
+# unsqueeze
+__all__ += ['convert_unsqueeze']
+# flip
+__all__ += ['convert_flip']
 
 try:
     # custom plugin support
@@ -165,16 +175,15 @@ try:
     from .cumsum import convert_cumsum
     from .deform_conv2d import convert_deform_conv2d
     from .Embedding import convert_embedding, convert_embedding_forward
-    from .expand import *
-    from .expand_as import convert_expand_as
-    from .flip import convert_flip
+
     from .gather import *
     from .grid_sample import convert_grid_sample
     from .GroupNorm import *
     from .meshgrid import convert_meshgrid
     from .nms import convert_nms
-    from .repeat import *
     from .roi_align import convert_roi_align, convert_RoiAlign
     from .roi_pool import convert_roi_pool, convert_RoIPool
+
+    __all__ += ['convert_adaptive_avg_pool2d']
 except Exception:
     print('plugin not found.')
