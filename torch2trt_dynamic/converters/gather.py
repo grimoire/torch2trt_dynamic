@@ -1,5 +1,5 @@
-from ..plugins import *
-from ..torch2trt_dynamic import *
+from ..plugins import create_torchgather_plugin
+from ..torch2trt_dynamic import get_arg, tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.Tensor.gather')

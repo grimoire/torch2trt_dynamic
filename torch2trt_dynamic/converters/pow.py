@@ -1,5 +1,7 @@
+import tensorrt as trt
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.pow')
@@ -17,7 +19,7 @@ def convert_pow(ctx):
 
 
 @tensorrt_converter('torch.Tensor.__rpow__')
-def convert_pow(ctx):
+def convert_rpow(ctx):
     input_a = ctx.method_args[1]
     input_b = ctx.method_args[0]  # flipped for rpow
     input_a_trt, input_b_trt = trt_(ctx.network, input_a, input_b)
@@ -51,7 +53,7 @@ def test_pow_basic():
 #         x **= y
 #         return x
 
-# @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)])
+# @add_module_test(torch.float32, torch.device('cuda'), [(1, 3, 224, 224), (1, 3, 224, 224)]) # noqa: E501
 # def test_pow_ipow():
 #     return IPow()
 

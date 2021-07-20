@@ -1,5 +1,6 @@
-from torch2trt_dynamic.plugins import *
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.plugins import create_torchcummaxmin_plugin
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 trt_)
 
 
 @tensorrt_converter('torch.cummax')

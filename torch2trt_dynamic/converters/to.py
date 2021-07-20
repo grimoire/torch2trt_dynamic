@@ -1,6 +1,7 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
+import torch
 
-from .cast_type import *
+from torch2trt_dynamic.torch2trt_dynamic import (tensorrt_converter, trt_,
+                                                 trt_cast)
 
 
 @tensorrt_converter('torch.Tensor.to')

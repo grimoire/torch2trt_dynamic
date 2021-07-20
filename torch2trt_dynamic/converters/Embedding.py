@@ -1,5 +1,5 @@
-from ..plugins import *
-from ..torch2trt_dynamic import *
+from ..plugins import create_torchembedding_plugin
+from ..torch2trt_dynamic import get_arg, tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.nn.Embedding.forward')
@@ -7,7 +7,6 @@ def convert_embedding_forward(ctx):
     module = ctx.method_args[0]
     inputs = ctx.method_args[1]
     weight = module.weight
-    output = ctx.method_return
 
     ctx.method_args = [inputs, weight]
     ctx.method_kwargs = {}

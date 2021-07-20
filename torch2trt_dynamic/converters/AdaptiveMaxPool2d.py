@@ -1,5 +1,7 @@
+import torch
+
 from ..module_test import add_module_test
-from ..torch2trt_dynamic import *
+from ..torch2trt_dynamic import tensorrt_converter
 from .adaptive_max_pool2d import convert_adaptive_max_pool2d
 
 

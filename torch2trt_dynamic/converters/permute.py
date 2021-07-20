@@ -1,5 +1,6 @@
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.Tensor.permute')
@@ -13,10 +14,6 @@ def convert_permute(ctx):
         permutation = tuple(ctx.method_args[1:])  # handle permute(a, b, c)
     else:
         permutation = tuple(ctx.method_args[1])  # handle permute([a, b, c])
-
-    # assert(permutation[0] == 0)  # cannot move batch dim
-
-    # trt_permutation = tuple([p - 1 for p in permutation])[1:]
 
     trt_permutation = permutation
 

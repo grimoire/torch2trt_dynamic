@@ -1,8 +1,7 @@
-import torchvision.ops
+import torchvision.ops  # noqa: F401
 
-from ..plugins import *
-from ..torch2trt_dynamic import *
-from .Conv2d import convert_Conv2d
+from ..plugins import create_dcn_plugin
+from ..torch2trt_dynamic import get_arg, tensorrt_converter, trt_
 
 
 @tensorrt_converter('torchvision.ops.deform_conv.deform_conv2d')
@@ -15,8 +14,6 @@ def convert_deform_conv2d(ctx):
     stride = get_arg(ctx, 'stride', pos=4, default=1)
     padding = get_arg(ctx, 'padding', pos=5, default=0)
     dilation = get_arg(ctx, 'dilation', pos=6, default=1)
-    # groups = get_arg(ctx, 'groups', pos=6, default=1)
-    # deform_groups = get_arg(ctx, 'deform_groups', pos=7, default=1)
     groups = 1
 
     output = ctx.method_return

@@ -1,5 +1,7 @@
-from ..plugins import *
-from ..torch2trt_dynamic import *
+import tensorrt as trt
+
+from ..plugins import create_gridsample_plugin
+from ..torch2trt_dynamic import get_arg, tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.nn.functional.grid_sample')

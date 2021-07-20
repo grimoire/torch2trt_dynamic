@@ -8,9 +8,7 @@ except Exception:
 # supported converters will override dummy converters
 
 from .activation import (convert_elu, convert_leaky_relu, convert_selu,
-                         convert_softplus, convert_softsign, test_elu,
-                         test_leaky_relu, test_selu, test_softplus,
-                         test_softsign)
+                         convert_softplus, convert_softsign)
 from .add import (convert_add, test_add_basic, test_add_iadd,
                   test_add_radd_float, test_add_radd_int, test_add_torchadd)
 from .addcmul import convert_addcmul, test_addcmul
@@ -35,6 +33,7 @@ from .ConvTranspose2d import convert_ConvTranspose2d
 from .div import convert_div, convert_rdiv
 from .exview import convert_exview
 from .flatten import convert_flatten
+from .flip import convert_flip
 from .floor_divide import convert_floor_div, convert_rfloor_div
 from .full import convert_full
 from .full_like import convert_full_like
@@ -70,48 +69,57 @@ from .normalize import convert_normalize
 from .numel import convert_numel
 from .ones import convert_ones
 from .ones_like import convert_ones_like
-from .pad import *
-from .permute import *
-from .pixel_shuffle import *
-from .pow import *
-from .prelu import *
-from .prod import *
-from .reciprocal import convert_reciprocal
-from .relu import *
-from .ReLU import *
-from .relu6 import *
-from .ReLU6 import *
-from .repeat import convert_repeat, convert_expand, convert_expand_as
-from .sigmoid import *
-from .size import *
-from .softmax import *
-from .split import *
-from .squeeze import *
-from .stack import *
-from .std import *
-from .sub import *
-from .sum import *
+from .pad import convert_pad
+from .permute import convert_permute
+from .pixel_shuffle import convert_pixel_shuffle
+from .pow import convert_pow, convert_rpow
+from .prelu import convert_prelu
+from .prod import convert_prod
+from .relu import convert_relu
+from .ReLU import convert_ReLU
+from .relu6 import convert_relu6
+from .ReLU6 import convert_ReLU6
+from .repeat import convert_expand, convert_expand_as, convert_repeat
+from .sigmoid import convert_sigmoid
+from .size import (convert_intwarper_add, convert_intwarper_floordiv,
+                   convert_intwarper_mul, convert_intwarper_pow,
+                   convert_intwarper_radd, convert_intwarper_rfloordiv,
+                   convert_intwarper_rmul, convert_intwarper_rpow,
+                   convert_intwarper_rsub, convert_intwarper_sub,
+                   convert_shapewarper_numel, convert_size)
+from .softmax import convert_softmax
+from .split import convert_split
+from .squeeze import convert_squeeze
+from .stack import convert_stack
+from .std import convert_std
+from .sub import convert_rsub, convert_sub
+from .sum import convert_sum
 from .t import convert_t
 from .take import convert_take
-from .tanh import *
+from .tanh import convert_tanh
 from .to import convert_Tensor_to
-from .topk import *
-from .transpose import *
-from .unary import *
+from .topk import convert_topk
+from .transpose import convert_transpose
+from .unary import (convert_abs, convert_acos, convert_asin, convert_atan,
+                    convert_ceil, convert_cos, convert_cosh, convert_floor,
+                    convert_invert, convert_log, convert_log2, convert_neg,
+                    convert_reciprocal, convert_sin, convert_sinh,
+                    convert_sqrt, convert_tan)
 from .unsqueeze import convert_unsqueeze
-from .view import *
-from .view_as import *
+from .view import convert_view
+from .view_as import convert_view_as
 from .where import convert_Tensor_where, convert_where
 from .zeros import convert_zeros
 from .zeros_like import convert_zeros_like
-from .flip import convert_flip
 
 __all__ = []
 # activation
 __all__ += [
-    'convert_leaky_relu', 'test_leaky_relu', 'convert_elu', 'test_elu',
-    'convert_selu', 'test_selu', 'convert_softsign', 'test_softsign',
-    'convert_softplus', 'test_softplus'
+    'convert_leaky_relu',
+    'convert_elu',
+    'convert_selu',
+    'convert_softsign',
+    'convert_softplus',
 ]
 # add
 __all__ += [
@@ -241,13 +249,88 @@ __all__ += ['convert_interpolate']
 __all__ += ['convert_unsqueeze']
 # flip
 __all__ += ['convert_flip']
+# pad
+__all__ += ['convert_pad']
+# permute
+__all__ += ['convert_permute']
+# pixel_shuffle
+__all__ += ['convert_pixel_shuffle']
+# pow
+__all__ += ['convert_pow', 'convert_rpow']
+# prelu
+__all__ += ['convert_prelu']
+# prod
+__all__ += ['convert_prod']
+# relu
+__all__ += ['convert_relu']
+# ReLU
+__all__ += ['convert_ReLU']
+# relu6
+__all__ += ['convert_relu6']
+# ReLU6
+__all__ += ['convert_ReLU6']
+# sigmoid
+__all__ += ['convert_sigmoid']
+# size
+__all__ += [
+    'convert_intwarper_add', 'convert_intwarper_floordiv',
+    'convert_intwarper_mul', 'convert_intwarper_radd',
+    'convert_intwarper_rmul', 'convert_intwarper_rsub',
+    'convert_intwarper_sub', 'convert_shapewarper_numel', 'convert_size',
+    'convert_intwarper_rfloordiv', 'convert_intwarper_pow',
+    'convert_intwarper_rpow'
+]
+# softmax
+__all__ += ['convert_softmax']
+# split
+__all__ += ['convert_split']
+# squeeze
+__all__ += ['convert_squeeze']
+# stack
+__all__ += ['convert_stack']
+# std
+__all__ += ['convert_std']
+# sub
+__all__ += ['convert_sub', 'convert_rsub']
+# sum
+__all__ += ['convert_sum']
+# t
+__all__ += ['convert_t']
+# take
+__all__ += ['convert_take']
+# tanh
+__all__ += ['convert_tanh']
+# to
+__all__ += ['convert_Tensor_to']
+# topk
+__all__ += ['convert_topk']
+# transpose
+__all__ += ['convert_transpose']
+# unary
+__all__ += [
+    'convert_abs', 'convert_acos', 'convert_asin', 'convert_atan',
+    'convert_ceil', 'convert_cos', 'convert_cosh', 'convert_floor',
+    'convert_invert', 'convert_log', 'convert_log2', 'convert_neg',
+    'convert_reciprocal', 'convert_sin', 'convert_sinh', 'convert_sqrt',
+    'convert_tan'
+]
+# view
+__all__ += ['convert_view']
+# view
+__all__ += ['convert_view_as']
+# where
+__all__ += ['convert_Tensor_where', 'convert_where']
+# zeros
+__all__ += ['convert_zeros']
+# zeros_like
+__all__ += ['convert_zeros_like']
 
 try:
     # custom plugin support
     from .adaptive_avg_pool2d import convert_adaptive_avg_pool2d
-    from .adaptive_max_pool2d import *
-    from .AdaptiveAvgPool2d import *
-    from .AdaptiveMaxPool2d import *
+    from .adaptive_max_pool2d import convert_adaptive_max_pool2d
+    from .AdaptiveAvgPool2d import convert_AdaptiveAvgPool2d
+    from .AdaptiveMaxPool2d import convert_AdaptiveMaxPool2d
     from .bmm import convert_bmm
     from .cummax import convert_cummax
     from .cummin import convert_cummin
@@ -255,15 +338,49 @@ try:
     from .cumsum import convert_cumsum
     from .deform_conv2d import convert_deform_conv2d
     from .Embedding import convert_embedding, convert_embedding_forward
-
-    from .gather import *
+    from .gather import convert_gather
     from .grid_sample import convert_grid_sample
-    from .GroupNorm import *
+    from .GroupNorm import convert_GroupNorm
     from .meshgrid import convert_meshgrid
     from .nms import convert_nms
     from .roi_align import convert_roi_align, convert_RoiAlign
     from .roi_pool import convert_roi_pool, convert_RoIPool
 
+    # adaptive_avg_pool2d
     __all__ += ['convert_adaptive_avg_pool2d']
+    # adaptive_max_pool2d
+    __all__ += ['convert_adaptive_max_pool2d']
+    # AdaptiveAvgPool2d
+    __all__ += ['convert_AdaptiveAvgPool2d']
+    # AdaptiveMaxPool2d
+    __all__ += ['convert_AdaptiveMaxPool2d']
+    # bmm
+    __all__ += ['convert_bmm']
+    # cummax
+    __all__ += ['convert_cummax']
+    # cummin
+    __all__ += ['convert_cummin']
+    # cumprod
+    __all__ += ['convert_cumprod']
+    # cumsum
+    __all__ += ['convert_cumsum']
+    # deform_conv2d
+    __all__ += ['convert_deform_conv2d']
+    # Embedding
+    __all__ += ['convert_embedding', 'convert_embedding_forward']
+    # gather
+    __all__ += ['convert_gather']
+    # grid_sample
+    __all__ += ['convert_grid_sample']
+    # GroupNorm
+    __all__ += ['convert_GroupNorm']
+    # meshgrid
+    __all__ += ['convert_meshgrid']
+    # nms
+    __all__ += ['convert_nms']
+    # roi_align
+    __all__ += ['convert_roi_align', 'convert_RoiAlign']
+    # roi_pool
+    __all__ += ['convert_roi_pool', 'convert_RoIPool']
 except Exception:
     print('plugin not found.')

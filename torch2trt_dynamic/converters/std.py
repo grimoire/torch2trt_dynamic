@@ -1,5 +1,7 @@
-from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+import tensorrt as trt
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg,
+                                                 tensor_trt_get_shape_trt,
+                                                 tensorrt_converter, trt_)
 
 from .mean import convert_mean
 from .mul import convert_mul

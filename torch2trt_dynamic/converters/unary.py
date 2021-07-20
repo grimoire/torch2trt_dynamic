@@ -1,5 +1,8 @@
+import tensorrt as trt
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 trt_)
 
 from .div import convert_div
 
@@ -187,7 +190,7 @@ def test_cos():
 @tensorrt_converter('torch.tan_')
 @tensorrt_converter('torch.Tensor.tan')
 @tensorrt_converter('torch.Tensor.tan_')
-def convert_cos(ctx):
+def convert_tan(ctx):
     __convert_unary(ctx, trt.UnaryOperation.TAN)
 
 

@@ -1,7 +1,7 @@
-import logging
-
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 trt_)
 
 from .size import IntWarper
 
@@ -17,28 +17,26 @@ def convert_view(ctx):
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
 
-    ## check if there are shape tensor
+    # check if there are shape tensor
     is_shape_tensor = False
     for s in size:
         if isinstance(s, IntWarper):
             is_shape_tensor = True
             break
 
-    ## negative shape might cause overflow, forbid for now
+    # negative shape might cause overflow, forbid for now
     for s in size:
         if s < 0:
             is_shape_tensor = True
             break
 
-    ## compute shape tensor
+    # compute shape tensor
     if is_shape_tensor:
         shape_trt = []
         for idx, s in enumerate(size):
             if isinstance(s, IntWarper):
                 shape_trt.append(s._trt)
             else:
-                # if s<0:
-                #     logging.debug("negative index of view/reshape might cause overflow!")
                 const_shape_trt = trt_(
                     ctx.network, input.new_tensor([s], dtype=torch.int32))
                 shape_trt.append(const_shape_trt)

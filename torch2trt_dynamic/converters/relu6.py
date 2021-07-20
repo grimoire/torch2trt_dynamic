@@ -1,6 +1,7 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
+import torch
+from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter
 
-from .ReLU6 import *
+from .ReLU6 import convert_ReLU6
 
 
 @tensorrt_converter('torch.nn.functional.relu6')

@@ -1,6 +1,7 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
+                                                 trt_)
 
-from ..plugins import *
+from ..plugins import create_torchcummaxmin_plugin
 
 
 @tensorrt_converter('torch.cummin')

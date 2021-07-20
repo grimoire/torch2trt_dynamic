@@ -1,4 +1,6 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
+import tensorrt as trt
+from torch2trt_dynamic.torch2trt_dynamic import (tensorrt_converter,
+                                                 torch_dtype_to_trt, trt_)
 
 
 @tensorrt_converter('torch.nn.ConvTranspose1d.forward')

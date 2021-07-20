@@ -1,5 +1,7 @@
+import tensorrt as trt
+import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import *
+from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.sub')
@@ -16,7 +18,7 @@ def convert_sub(ctx):
 
 
 @tensorrt_converter('torch.Tensor.__rsub__')
-def convert_sub(ctx):
+def convert_rsub(ctx):
     input_a = ctx.method_args[1]
     input_b = ctx.method_args[0]  # flipped for rsub
     input_a_trt, input_b_trt = trt_(ctx.network, input_a, input_b)

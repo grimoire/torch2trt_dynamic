@@ -1,4 +1,5 @@
-from torch2trt_dynamic.torch2trt_dynamic import *
+import tensorrt as trt
+from torch2trt_dynamic.torch2trt_dynamic import tensorrt_converter, trt_
 
 
 @tensorrt_converter('torch.nn.ReLU.forward')
