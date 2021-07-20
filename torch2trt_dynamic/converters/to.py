@@ -1,5 +1,4 @@
 import torch
-
 from torch2trt_dynamic.torch2trt_dynamic import (tensorrt_converter, trt_,
                                                  trt_cast)
 
