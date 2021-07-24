@@ -16,7 +16,7 @@ def convert_arange(ctx):
     else:
         start = get_arg(ctx, 'start', pos=0, default=0)
         end = get_arg(ctx, 'end', pos=1, default=1)
-        step = get_arg(ctx, 'step', pos=2, default=2)
+        step = get_arg(ctx, 'step', pos=2, default=1)
         dtype = get_arg(ctx, 'dtype', pos=4, default=None)
 
     output = ctx.method_return

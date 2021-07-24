@@ -1,7 +1,7 @@
 import torch
 from torch2trt_dynamic.module_test import add_module_test
 from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
-                                                 trt_)
+                                                 trt_, trt_cast)
 
 from .size import IntWarper
 
@@ -16,6 +16,9 @@ def convert_view(ctx):
         size = tuple(ctx.method_args[1:])
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
+
+    if input.dtype == torch.bool:
+        input_trt = trt_cast(ctx.network, input_trt, torch.int32)
 
     # check if there are shape tensor
     is_shape_tensor = False
@@ -48,7 +51,13 @@ def convert_view(ctx):
         layer.set_input(1, shape_trt)
     else:
         layer.reshape_dims = output.shape
-    output._trt = layer.get_output(0)
+
+    output_trt = layer.get_output(0)
+
+    if input.dtype == torch.bool:
+        output_trt = trt_cast(ctx.network, output_trt, torch.bool)
+
+    output._trt = output_trt
 
 
 class View(torch.nn.Module):
