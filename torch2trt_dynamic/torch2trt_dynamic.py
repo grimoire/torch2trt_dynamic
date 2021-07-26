@@ -1,6 +1,7 @@
 import numpy as np
 import tensorrt as trt
 import torch
+from packaging import version
 
 from .calibration import (DEFAULT_CALIBRATION_ALGORITHM, DatasetCalibrator,
                           TensorBatchDataset)
@@ -538,9 +539,10 @@ def torch2trt_dynamic(module,
 
         torch.cuda.empty_cache()
 
-        builder.max_workspace_size = max_workspace_size
-        builder.max_batch_size = max_batch_size
-        builder.strict_type_constraints = strict_type_constraints
+        if version.parse(trt.__version__) < version.parse('8'):
+            builder.max_workspace_size = max_workspace_size
+            builder.max_batch_size = max_batch_size
+            builder.strict_type_constraints = strict_type_constraints
 
         config = builder.create_builder_config()
         config.max_workspace_size = max_workspace_size

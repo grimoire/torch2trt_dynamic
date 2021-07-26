@@ -1,5 +1,6 @@
 import tensorrt as trt
 import torch
+from packaging import version
 
 from ..module_test import add_module_test
 from ..torch2trt_dynamic import (get_arg, tensor_trt_get_shape_trt,
@@ -74,7 +75,12 @@ def convert_interpolate(ctx):
         layer.scales = scale_factor
     else:
         layer.shape = tuple(output.shape)
-    layer.align_corners = align_corners
+
+    if version.parse(trt.__version__) >= version.parse('8'):
+        layer.coordinate_transformation = \
+            trt.ResizeCoordinateTransformation.ALIGN_CORNERS
+    else:
+        layer.align_corners = align_corners
 
     if mode == 'nearest':
         layer.resize_mode = trt.ResizeMode.NEAREST
