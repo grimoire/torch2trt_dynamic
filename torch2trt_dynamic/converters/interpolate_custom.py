@@ -79,6 +79,7 @@ def convert_interpolate(ctx):
     if version.parse(trt.__version__) >= version.parse('8'):
         layer.coordinate_transformation = \
             trt.ResizeCoordinateTransformation.ALIGN_CORNERS
+        layer.nearest_rounding = trt.ResizeRoundMode.HALF_DOWN
     else:
         layer.align_corners = align_corners
 

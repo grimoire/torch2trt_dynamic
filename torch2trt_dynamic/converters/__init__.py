@@ -59,6 +59,7 @@ from .max import convert_max
 from .max_pool1d import convert_max_pool1d
 from .max_pool2d import convert_max_pool2d
 from .mean import convert_mean
+from .meshgrid import convert_meshgrid
 from .min import convert_min
 from .mod import convert_mod
 from .mul import convert_mul
@@ -80,6 +81,7 @@ from .ReLU import convert_ReLU
 from .relu6 import convert_relu6
 from .ReLU6 import convert_ReLU6
 from .repeat import convert_expand, convert_expand_as, convert_repeat
+from .roll import convert_roll
 from .sigmoid import convert_sigmoid
 from .size import (convert_intwarper_add, convert_intwarper_floordiv,
                    convert_intwarper_mul, convert_intwarper_pow,
@@ -324,9 +326,15 @@ __all__ += ['convert_Tensor_where', 'convert_where']
 __all__ += ['convert_zeros']
 # zeros_like
 __all__ += ['convert_zeros_like']
+# meshgrid
+__all__ += ['convert_meshgrid']
+# roll
+__all__ += ['convert_roll']
 
 try:
     # custom plugin support
+    from .adaptive_avg_pool1d import convert_adaptive_avg_pool1d
+    from .adaptive_max_pool1d import convert_adaptive_max_pool1d
     from .adaptive_avg_pool2d import convert_adaptive_avg_pool2d
     from .adaptive_max_pool2d import convert_adaptive_max_pool2d
     from .AdaptiveAvgPool2d import convert_AdaptiveAvgPool2d
@@ -341,11 +349,14 @@ try:
     from .gather import convert_gather
     from .grid_sample import convert_grid_sample
     from .GroupNorm import convert_GroupNorm
-    from .meshgrid import convert_meshgrid
     from .nms import convert_nms
     from .roi_align import convert_roi_align, convert_RoiAlign
     from .roi_pool import convert_roi_pool, convert_RoIPool
 
+    # adaptive_avg_pool1d
+    __all__ += ['convert_adaptive_avg_pool1d']
+    # adaptive_max_pool1d
+    __all__ += ['convert_adaptive_max_pool1d']
     # adaptive_avg_pool2d
     __all__ += ['convert_adaptive_avg_pool2d']
     # adaptive_max_pool2d
@@ -374,8 +385,6 @@ try:
     __all__ += ['convert_grid_sample']
     # GroupNorm
     __all__ += ['convert_GroupNorm']
-    # meshgrid
-    __all__ += ['convert_meshgrid']
     # nms
     __all__ += ['convert_nms']
     # roi_align

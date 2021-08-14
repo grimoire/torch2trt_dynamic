@@ -564,7 +564,8 @@ def torch2trt_dynamic(module,
         config.add_optimization_profile(profile)
 
     if fp16_mode:
-        builder.fp16_mode = fp16_mode
+        if version.parse(trt.__version__) < version.parse('8'):
+            builder.fp16_mode = fp16_mode
         config.set_flag(trt.BuilderFlag.FP16)
 
     if int8_mode:
@@ -581,7 +582,8 @@ def torch2trt_dynamic(module,
             batch_size=opt_shape[0],
             algorithm=int8_calib_algorithm)
         config.set_calibration_profile(profile)
-        builder.int8_mode = int8_mode
+        if version.parse(trt.__version__) < version.parse('8'):
+            builder.int8_mode = int8_mode
         builder.int8_calibrator = config.int8_calibrator
 
     engine = builder.build_engine(network, config)

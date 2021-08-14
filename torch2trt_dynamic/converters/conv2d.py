@@ -28,7 +28,9 @@ def convert_conv2d(ctx):
         dilation=dilation,
         groups=groups,
         bias=need_bias)
-    module.weight = weight
+    module.weight = torch.nn.parameter.Parameter(weight)
+    if bias is not None:
+        bias = torch.nn.parameter.Parameter(bias)
     module.bias = bias
 
     ctx.method_args = (module, ctx.method_args[0])
