@@ -1,6 +1,5 @@
 import tensorrt as trt
 import torch
-
 from torch2trt_dynamic.torch2trt_dynamic import (get_arg, slice_shape_trt,
                                                  tensor_trt_get_shape_trt,
                                                  tensorrt_converter, trt_)

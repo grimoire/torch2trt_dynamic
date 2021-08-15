@@ -352,6 +352,7 @@ try:
     from .nms import convert_nms
     from .roi_align import convert_roi_align, convert_RoiAlign
     from .roi_pool import convert_roi_pool, convert_RoIPool
+    from .unfold import convert_unfold
 
     # adaptive_avg_pool1d
     __all__ += ['convert_adaptive_avg_pool1d']
@@ -391,5 +392,7 @@ try:
     __all__ += ['convert_roi_align', 'convert_RoiAlign']
     # roi_pool
     __all__ += ['convert_roi_pool', 'convert_RoIPool']
+    # unfold
+    __all__ += ['convert_unfold']
 except Exception:
     print('plugin not found.')
