@@ -584,7 +584,7 @@ def torch2trt_dynamic(module,
         config.set_calibration_profile(profile)
         if version.parse(trt.__version__) < version.parse('8'):
             builder.int8_mode = int8_mode
-        builder.int8_calibrator = config.int8_calibrator
+            builder.int8_calibrator = config.int8_calibrator
 
     engine = builder.build_engine(network, config)
 
