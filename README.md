@@ -2,13 +2,11 @@
 
 This is a branch of [torch2trt](https://github.com/NVIDIA-AI-IOT/torch2trt) with dynamic input support
 
-Not all layers support dynamic input such as `torch.split()` etc...
-
-You can create a custom layer from nvinfer1::IPluginV2DynamicExt to implement it.
+Note that not all layers support dynamic input such as `torch.split()` etc...
 
 ## Usage
 
-Below are some usage examples
+Here are some examples
 
 ### Convert
 
@@ -37,7 +35,7 @@ model_trt = torch2trt_dynamic(model, [x], fp16_mode=False, opt_shape_param=opt_s
 
 ### Execute
 
-We can execute the returned ``TRTModule`` just like the original PyTorch model
+We can execute the returned `TRTModule` just like the original PyTorch model
 
 ```python
 x = torch.rand(1,3,256,256).cuda()
@@ -79,11 +77,11 @@ python setup.py develop
 
 ### Set plugins(optional)
 
-Some layers such as `GN` and `repeat` need c++ plugins. Install the plugin project below
+Some layers such as `GN` need c++ plugins. Install the plugin project below
 
 [amirstan_plugin](https://github.com/grimoire/amirstan_plugin)
 
-remember to export the environment variable AMIRSTAN_LIBRARY_PATH
+**DO NOT FORGET** to export the environment variable `AMIRSTAN_LIBRARY_PATH`
 
 ## How to add (or override) a converter
 

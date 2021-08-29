@@ -130,7 +130,7 @@ class CleanCommand(Command):
 
 setup(
     name='torch2trt_dynamic',
-    version='0.4.1',
+    version='0.5.0',
     description='An easy to use PyTorch to TensorRT converter' +
     ' with dynamic shape support',
     cmdclass={
