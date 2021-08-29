@@ -100,7 +100,7 @@ def check_torch_dtype(*tensors):
         if isinstance(t, torch.Tensor):
             if dtype is None:
                 if t.dtype == torch.long:
-                    dtype = torch832
+                    dtype = torch.int32
                 else:
                     dtype = t.dtype
             else:
