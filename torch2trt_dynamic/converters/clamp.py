@@ -1,5 +1,6 @@
 import tensorrt as trt
 import torch
+from packaging import version
 from torch2trt_dynamic.module_test import add_module_test
 from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
                                                  torch_dtype_from_trt, trt_)
@@ -14,17 +15,33 @@ def __add_clamp(network, trt_input, val, op):
     if isinstance(val, IntWarper):
         val_trt = val._trt
 
-        # convert type
-        layer = network.add_identity(val_trt)
-        layer.set_output_type(0, trt_input.dtype)
-        val_trt = layer.get_output(0)
+        if version.parse(trt.__version__) < version.parse('8'):
+            # convert type
+            layer = network.add_identity(val_trt)
+            layer.set_output_type(0, trt_input.dtype)
+            val_trt = layer.get_output(0)
 
-        # convert 2 / to prevent warning, might remove in future version
-        layer = network.add_elementwise(
-            val_trt, trt_(network, torch.zeros((1, ), dtype=torch.float32)),
-            trt.ElementWiseOperation.SUM)
-        layer.set_output_type(0, trt_input.dtype)
-        val_trt = layer.get_output(0)
+            # convert 2 / to prevent warning, might remove in future version
+            layer = network.add_elementwise(
+                val_trt, trt_(network, torch.zeros(
+                    (1, ), dtype=torch.float32)), trt.ElementWiseOperation.SUM)
+            layer.set_output_type(0, trt_input.dtype)
+            val_trt = layer.get_output(0)
+
+        else:
+            torch_type = torch_dtype_from_trt(val_trt.dtype)
+
+            # convert 2 / to prevent warning, might remove in future version
+            layer = network.add_elementwise(
+                val_trt, trt_(network, torch.zeros((1, ), dtype=torch_type)),
+                trt.ElementWiseOperation.SUM)
+            layer.set_output_type(0, trt_input.dtype)
+            val_trt = layer.get_output(0)
+
+            # convert type
+            layer = network.add_identity(val_trt)
+            layer.set_output_type(0, trt_input.dtype)
+            val_trt = layer.get_output(0)
 
         # reshape
         layer = network.add_shuffle(val_trt)
