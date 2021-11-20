@@ -11,18 +11,17 @@ def convert_type(ctx, data_type):
     layer = ctx.network.add_identity(input_trt)
     layer.set_output_type(0, data_type)
     output._trt = layer.get_output(0)
+    output._trt.shape  # trick to enable type cast
 
 
 @tensorrt_converter('torch.Tensor.long')
 @tensorrt_converter('torch.Tensor.int')
 def convert_int(ctx):
     convert_type(ctx, trt.DataType.INT32)
-    convert_type(ctx, trt.DataType.INT32)
 
 
 @tensorrt_converter('torch.Tensor.float')
 def convert_float(ctx):
-    convert_type(ctx, trt.DataType.FLOAT)
     convert_type(ctx, trt.DataType.FLOAT)
 
 
@@ -43,3 +42,4 @@ def convert_type_as(ctx):
     layer = ctx.network.add_identity(input_trt)
     layer.set_output_type(0, other_trt.dtype)
     output._trt = layer.get_output(0)
+    output._trt.shape  # trick to enable type cast
