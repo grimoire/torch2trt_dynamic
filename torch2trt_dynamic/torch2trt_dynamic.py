@@ -176,9 +176,7 @@ def trt_(network, *tensors):
             # Int warper
             trt_tensor = t._trt
             trt_dtype = torch_dtype_to_trt(dtype)
-            layer = network.add_identity(trt_tensor)
-            layer.set_output_type(0, trt_dtype)
-            trt_tensor = layer.get_output(0)
+            trt_tensor = trt_cast(network, trt_tensor, trt_dtype)
 
         # or... add constant for scalar primitive
         elif isinstance(t, float) or isinstance(t, int):
@@ -262,13 +260,6 @@ def trt_cast(network, val_trt, data_type):
     layer.set_output_type(0, data_type)
     val_trt = layer.get_output(0)
     val_trt.shape  # trick to enable type cast, I have no idea why...
-
-    # if len(val_trt.shape) == 1:
-    #     layer = network.add_elementwise(
-    #         trt_(network, torch.zeros((1, ), dtype=zeros_type)), val_trt,
-    #         trt.ElementWiseOperation.SUM)
-    #     layer.set_output_type(0, data_type)
-    #     val_trt = layer.get_output(0)
 
     return val_trt
 
