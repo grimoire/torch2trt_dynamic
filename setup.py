@@ -1,9 +1,9 @@
 import glob
 import os
 import shutil
-from distutils.cmd import Command
 
 from build import build
+from distutils.cmd import Command
 from setuptools import find_packages, setup
 from setuptools.command.develop import develop
 from setuptools.command.install import install
@@ -130,7 +130,7 @@ class CleanCommand(Command):
 
 setup(
     name='torch2trt_dynamic',
-    version='0.5.0',
+    version='0.6.0',
     description='An easy to use PyTorch to TensorRT converter' +
     ' with dynamic shape support',
     cmdclass={

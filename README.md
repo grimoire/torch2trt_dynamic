@@ -1,8 +1,6 @@
 # torch2trt dynamic
 
-This is a branch of [torch2trt](https://github.com/NVIDIA-AI-IOT/torch2trt) with dynamic input support
-
-Note that not all layers support dynamic input such as `torch.split()` etc...
+This is a branch of [torch2trt](https://github.com/NVIDIA-AI-IOT/torch2trt) with dynamic input support.
 
 ## Usage
 
@@ -11,26 +9,29 @@ Here are some examples
 ### Convert
 
 ```python
-from torch2trt_dynamic import torch2trt_dynamic
+from torch2trt_dynamic import module2trt, BuildEngineConfig
 import torch
-from torch import nn
-from torchvision.models.resnet import resnet50
+from torchvision.models import resnet18
 
 # create some regular pytorch model...
-model = resnet50().cuda().eval()
+model = resnet18().cuda().eval()
 
 # create example data
 x = torch.ones((1, 3, 224, 224)).cuda()
 
 # convert to TensorRT feeding sample data as input
-opt_shape_param = [
-    [
-        [1, 3, 128, 128],   # min
-        [1, 3, 256, 256],   # opt
-        [1, 3, 512, 512]    # max
-    ]
-]
-model_trt = torch2trt_dynamic(model, [x], fp16_mode=False, opt_shape_param=opt_shape_param)
+    config = BuildEngineConfig(
+        shape_ranges=dict(
+            x=dict(
+                min=(1, 3, 224, 224),
+                opt=(2, 3, 224, 224),
+                max=(4, 3, 224, 224),
+            )
+        ))
+    trt_model = module2trt(
+        model,
+        args=[x],
+        config=config)
 ```
 
 ### Execute
@@ -38,13 +39,13 @@ model_trt = torch2trt_dynamic(model, [x], fp16_mode=False, opt_shape_param=opt_s
 We can execute the returned `TRTModule` just like the original PyTorch model
 
 ```python
-x = torch.rand(1,3,256,256).cuda()
+x = torch.rand(1, 3, 224, 224).cuda()
 with torch.no_grad():
     y = model(x)
-    y_trt = model_trt(x)
+    y_trt = trt_model(x)
 
 # check the output against PyTorch
-print(torch.max(torch.abs(y - y_trt)))
+torch.testing.assert_close(y, y_trt)
 ```
 
 ### Save and load
@@ -52,7 +53,7 @@ print(torch.max(torch.abs(y - y_trt)))
 We can save the model as a ``state_dict``.
 
 ```python
-torch.save(model_trt.state_dict(), 'alexnet_trt.pth')
+torch.save(trt_model.state_dict(), 'my_engine.pth')
 ```
 
 We can load the saved model into a ``TRTModule``
@@ -60,9 +61,8 @@ We can load the saved model into a ``TRTModule``
 ```python
 from torch2trt_dynamic import TRTModule
 
-model_trt = TRTModule()
-
-model_trt.load_state_dict(torch.load('alexnet_trt.pth'))
+trt_model = TRTModule()
+trt_model.load_state_dict(torch.load('my_engine.pth'))
 ```
 
 ## Setup
@@ -72,7 +72,7 @@ To install without compiling plugins, call the following
 ```bash
 git clone https://github.com/grimoire/torch2trt_dynamic.git torch2trt_dynamic
 cd torch2trt_dynamic
-python setup.py develop
+pip install .
 ```
 
 ### Set plugins(optional)
