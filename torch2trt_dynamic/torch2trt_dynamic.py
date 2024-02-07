@@ -288,7 +288,7 @@ def convert_with_args(ctx, convert_func, args, kw_args, returns):
 CONVERTERS = {}
 
 
-def get_arg(ctx, name, pos, default):
+def get_arg(ctx, name, pos, default=None):
     if name in ctx.method_kwargs:
         return ctx.method_kwargs[name]
     elif len(ctx.method_args) > pos:
@@ -590,7 +590,7 @@ class TRTModule(torch.nn.Module):
 class BuildEngineConfig:
     shape_ranges: Dict = None
     pool: trt.MemoryPoolType = trt.MemoryPoolType.WORKSPACE
-    pool_size: int = 0
+    pool_size: int = None
     fp16: bool = False
     int8: bool = False
     int8_calib_dataset: Any = None
@@ -684,7 +684,8 @@ def build_engine(func: Any,
 
     def __make_builder_config(builder: trt.Builder, shape_ranges: Dict):
         builder_config = builder.create_builder_config()
-        builder_config.set_memory_pool_limit(config.pool, config.pool_size)
+        if config.pool_size is not None:
+            builder_config.set_memory_pool_limit(config.pool, config.pool_size)
         profile = __make_profile(builder, shape_ranges)
         builder_config.add_optimization_profile(profile)
 
@@ -704,6 +705,8 @@ def build_engine(func: Any,
     network, module_meta = build_network(builder, func, inputs, config=config)
     builder_config = __make_builder_config(builder, shape_ranges)
     host_mem = builder.build_serialized_network(network, builder_config)
+    if host_mem is None:
+        raise RuntimeError('Failed to build TensorRT engine')
 
     runtime = trt.Runtime(logger)
     engine = runtime.deserialize_cuda_engine(host_mem)
@@ -753,7 +756,7 @@ def torch2trt_dynamic(module,
                       log_level=trt.Logger.ERROR,
                       max_batch_size=1,
                       fp16_mode=False,
-                      max_workspace_size=0,
+                      max_workspace_size=None,
                       opt_shape_param=None,
                       strict_type_constraints=False,
                       keep_network=True,

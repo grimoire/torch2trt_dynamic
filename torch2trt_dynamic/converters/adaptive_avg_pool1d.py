@@ -1,5 +1,4 @@
 import tensorrt as trt
-from torch2trt_dynamic.plugins import create_adaptivepool_plugin
 from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
                                                  trt_)
 
@@ -20,6 +19,7 @@ def convert_adaptive_avg_pool1d(ctx):
                                        axes, keepdim)
         output._trt = layer.get_output(0)
     else:
+        from torch2trt_dynamic.plugins import create_adaptivepool_plugin
         output_size = (output_size, 1)
 
         # input.unsqueeze(-1)

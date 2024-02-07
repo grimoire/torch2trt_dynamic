@@ -8,7 +8,7 @@ def test_convert(tmp_path):
 
     trt_model = module2trt(
         model,
-        args=[torch.rand(1, 3, 224, 224).cuda()],
+        args=[torch.rand(1, 3, 32, 32).cuda()],
     )
 
     model_path = tmp_path / 'tmp.pth'
@@ -18,9 +18,11 @@ def test_convert(tmp_path):
     trt_model = TRTModule()
     trt_model.load_state_dict(torch.load(model_path))
 
-    x = torch.rand(1, 3, 224, 224).cuda()
+    x = torch.rand(1, 3, 32, 32).cuda()
     with torch.no_grad():
         y = model(x)
         y_trt = trt_model(x)
 
+    print(y)
+    print(y_trt)
     torch.testing.assert_close(y, y_trt)

@@ -7,7 +7,14 @@ except Exception:
 
 # supported converters will override dummy converters
 
+from . import AdaptiveAvgPool2d  # noqa: F401
+from . import AdaptiveMaxPool2d  # noqa: F401
+from . import adaptive_avg_pool1d  # noqa: F401
+from . import adaptive_avg_pool2d  # noqa: F401
+from . import adaptive_max_pool1d  # noqa: F401
+from . import adaptive_max_pool2d  # noqa: F401
 from . import add  # noqa: F401
+from . import grid_sample  # noqa: F401
 from .activation import (convert_elu, convert_leaky_relu, convert_selu,
                          convert_softplus, convert_softsign)
 from .addcmul import convert_addcmul, test_addcmul
@@ -327,12 +334,6 @@ __all__ += ['convert_roll']
 
 try:
     # custom plugin support
-    from .adaptive_avg_pool1d import convert_adaptive_avg_pool1d
-    from .adaptive_max_pool1d import convert_adaptive_max_pool1d
-    from .adaptive_avg_pool2d import convert_adaptive_avg_pool2d
-    from .adaptive_max_pool2d import convert_adaptive_max_pool2d
-    from .AdaptiveAvgPool2d import convert_AdaptiveAvgPool2d
-    from .AdaptiveMaxPool2d import convert_AdaptiveMaxPool2d
     from .bmm import convert_bmm
     from .cummax import convert_cummax
     from .cummin import convert_cummin
@@ -341,25 +342,12 @@ try:
     from .deform_conv2d import convert_deform_conv2d
     from .Embedding import convert_embedding, convert_embedding_forward
     from .gather import convert_gather
-    from .grid_sample import convert_grid_sample
-    from .GroupNorm import convert_GroupNorm
+    from . import GroupNorm  # noqa: F401
     from .nms import convert_nms
     from .roi_align import convert_roi_align, convert_RoiAlign
     from .roi_pool import convert_roi_pool, convert_RoIPool
     from .unfold import convert_unfold
 
-    # adaptive_avg_pool1d
-    __all__ += ['convert_adaptive_avg_pool1d']
-    # adaptive_max_pool1d
-    __all__ += ['convert_adaptive_max_pool1d']
-    # adaptive_avg_pool2d
-    __all__ += ['convert_adaptive_avg_pool2d']
-    # adaptive_max_pool2d
-    __all__ += ['convert_adaptive_max_pool2d']
-    # AdaptiveAvgPool2d
-    __all__ += ['convert_AdaptiveAvgPool2d']
-    # AdaptiveMaxPool2d
-    __all__ += ['convert_AdaptiveMaxPool2d']
     # bmm
     __all__ += ['convert_bmm']
     # cummax
@@ -376,10 +364,6 @@ try:
     __all__ += ['convert_embedding', 'convert_embedding_forward']
     # gather
     __all__ += ['convert_gather']
-    # grid_sample
-    __all__ += ['convert_grid_sample']
-    # GroupNorm
-    __all__ += ['convert_GroupNorm']
     # nms
     __all__ += ['convert_nms']
     # roi_align

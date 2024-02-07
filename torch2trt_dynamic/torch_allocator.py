@@ -1,7 +1,6 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 import tensorrt as trt
 import torch
-from mmdeploy.utils import get_root_logger
 
 
 class TorchAllocator(trt.IGpuAllocator):
@@ -33,8 +32,6 @@ class TorchAllocator(trt.IGpuAllocator):
             int: memory address.
         """
         torch_stream = torch.cuda.current_stream(self.device_id)
-        logger = get_root_logger()
-        logger.debug(f'allocate {size} memory with TorchAllocator.')
         assert alignment >= 0
         if alignment > 0:
             size = size | (alignment - 1) + 1
