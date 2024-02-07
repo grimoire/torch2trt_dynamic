@@ -9,6 +9,7 @@ import torch
 from .calibration import (DEFAULT_CALIBRATION_ALGORITHM, DatasetCalibrator,
                           SequenceDataset)
 from .shape_converter import ShapeConverter
+from .torch_allocator import TorchAllocator
 
 # UTILITY FUNCTIONS
 
@@ -478,12 +479,16 @@ class TRTModule(torch.nn.Module):
         engine_bytes = state_dict[prefix + 'engine']
         self.meta = state_dict[prefix + 'meta']
 
-        with trt.Logger() as logger, trt.Runtime(logger) as runtime:
-            self.engine = runtime.deserialize_cuda_engine(engine_bytes)
+        logger = trt.Logger()
+        runtime = trt.Runtime(logger)
+        self.engine = runtime.deserialize_cuda_engine(engine_bytes)
         self.update_context()
 
     def update_context(self):
         self.context = self.engine.create_execution_context()
+        self.allocator = TorchAllocator()
+        if hasattr(self.context, 'temporary_allocator'):
+            self.context.temporary_allocator = self.allocator
 
     @property
     def input_names(self):
@@ -516,7 +521,7 @@ class TRTModule(torch.nn.Module):
 
         for name, tensor in inputs.items():
             shape = tensor.shape
-            input_shapes = self.engine.get_profile_shape(0, name)
+            input_shapes = self.engine.get_tensor_profile_shape(name, 0)
             min_shape, opt_shape, max_shape = input_shapes
             assert len(shape) == len(opt_shape), (
                 f'input <{name}> dimension mismatch: ',
@@ -536,17 +541,18 @@ class TRTModule(torch.nn.Module):
         def __setup_inputs(inputs: Dict, bindings: Sequence):
             for input_name, tensor in inputs.items():
                 idx = self.engine.get_binding_index(input_name)
-                self.context.set_binding_shape(idx, tuple(tensor.shape))
+                self.context.set_input_shape(input_name, tuple(tensor.shape))
                 bindings[idx] = tensor.data_ptr()
 
         def __setup_outputs(bindings: Sequence):
             outputs = dict()
-            for i, output_name in enumerate(self.output_names):
+            for output_name in self.output_names:
                 idx = self.engine.get_binding_index(output_name)
                 dtype = torch_dtype_from_trt(
-                    self.engine.get_binding_dtype(idx))
-                shape = tuple(self.context.get_binding_shape(idx))
-                device = torch_device_from_trt(self.engine.get_location(idx))
+                    self.engine.get_tensor_dtype(output_name))
+                shape = tuple(self.context.get_tensor_shape(output_name))
+                device = torch_device_from_trt(
+                    self.engine.get_tensor_location(output_name))
                 output = torch.empty(size=shape, dtype=dtype, device=device)
                 outputs[output_name] = output
                 bindings[idx] = output.data_ptr()
@@ -564,11 +570,15 @@ class TRTModule(torch.nn.Module):
                                 f'{self.output_type}')
 
         inputs = self._bind_inputs(*args, **kwargs)
-        __setup_inputs(inputs, bindings)
-        outputs = __setup_outputs(bindings)
+        device = tuple(inputs.values())[0].device
 
-        self.context.execute_async_v2(bindings,
-                                      torch.cuda.current_stream().cuda_stream)
+        with torch.cuda.device(device):
+            __setup_inputs(inputs, bindings)
+            outputs = __setup_outputs(bindings)
+
+            self.context.execute_async_v2(
+                bindings,
+                torch.cuda.current_stream().cuda_stream)
         return __get_return_value(outputs)
 
     def enable_profiling(self):
@@ -693,7 +703,10 @@ def build_engine(func: Any,
     builder = trt.Builder(logger)
     network, module_meta = build_network(builder, func, inputs, config=config)
     builder_config = __make_builder_config(builder, shape_ranges)
-    engine = builder.build_engine(network, builder_config)
+    host_mem = builder.build_serialized_network(network, builder_config)
+
+    runtime = trt.Runtime(logger)
+    engine = runtime.deserialize_cuda_engine(host_mem)
 
     if engine is None:
         raise RuntimeError('Failed to build TensorRT engine')

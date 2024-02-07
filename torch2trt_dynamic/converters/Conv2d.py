@@ -34,15 +34,15 @@ def convert_Conv2d(ctx):
     if module.bias is not None:
         bias = module.bias.detach().cpu().numpy()
 
-    layer = ctx.network.add_convolution(
+    layer = ctx.network.add_convolution_nd(
         input=input_trt,
         num_output_maps=module.out_channels,
         kernel_shape=kernel_size,
         kernel=kernel,
         bias=bias)
-    layer.stride = stride
-    layer.padding = padding
-    layer.dilation = dilation
+    layer.stride_nd = stride
+    layer.padding_nd = padding
+    layer.dilation_nd = dilation
 
     if module.groups is not None:
         layer.num_groups = module.groups

@@ -7,10 +7,9 @@ except Exception:
 
 # supported converters will override dummy converters
 
+from . import add  # noqa: F401
 from .activation import (convert_elu, convert_leaky_relu, convert_selu,
                          convert_softplus, convert_softsign)
-from .add import (convert_add, test_add_basic, test_add_iadd,
-                  test_add_radd_float, test_add_radd_int, test_add_torchadd)
 from .addcmul import convert_addcmul, test_addcmul
 from .arange import convert_arange
 from .argmax import convert_argmax
@@ -122,11 +121,6 @@ __all__ += [
     'convert_selu',
     'convert_softsign',
     'convert_softplus',
-]
-# add
-__all__ += [
-    'convert_add', 'test_add_basic', 'test_add_iadd', 'test_add_radd_float',
-    'test_add_radd_int', 'test_add_torchadd'
 ]
 # addcmul
 __all__ += ['convert_addcmul', 'test_addcmul']
