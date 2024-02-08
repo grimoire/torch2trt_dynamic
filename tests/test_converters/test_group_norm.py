@@ -5,6 +5,7 @@ from torch2trt_dynamic import module2trt
 
 
 class _TestModel(nn.Module):
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__()
         self.gn = nn.GroupNorm(*args, **kwargs)
@@ -32,8 +33,7 @@ class TestGroupNorm:
         model = _TestModel(num_groups, num_channels)
         model = model.eval().cuda()
         dummy_input = torch.zeros_like(input)
-        trt_model = module2trt(model,
-                               args=[dummy_input])
+        trt_model = module2trt(model, args=[dummy_input])
 
         with torch.inference_mode():
             gt = model(input)

@@ -536,18 +536,15 @@ class TRTModule(torch.nn.Module):
         return inputs
 
     def forward(self, *args, **kwargs):
-        bindings = [None] * (len(self.input_names) + len(self.output_names))
 
-        def __setup_inputs(inputs: Dict, bindings: Sequence):
+        def __setup_inputs(inputs: Dict):
             for input_name, tensor in inputs.items():
-                idx = self.engine.get_binding_index(input_name)
                 self.context.set_input_shape(input_name, tuple(tensor.shape))
-                bindings[idx] = tensor.data_ptr()
+                self.context.set_tensor_address(input_name, tensor.data_ptr())
 
-        def __setup_outputs(bindings: Sequence):
+        def __setup_outputs():
             outputs = dict()
             for output_name in self.output_names:
-                idx = self.engine.get_binding_index(output_name)
                 dtype = torch_dtype_from_trt(
                     self.engine.get_tensor_dtype(output_name))
                 shape = tuple(self.context.get_tensor_shape(output_name))
@@ -555,7 +552,7 @@ class TRTModule(torch.nn.Module):
                     self.engine.get_tensor_location(output_name))
                 output = torch.empty(size=shape, dtype=dtype, device=device)
                 outputs[output_name] = output
-                bindings[idx] = output.data_ptr()
+                self.context.set_tensor_address(output_name, output.data_ptr())
             return outputs
 
         def __get_return_value(outputs: Dict):
@@ -573,11 +570,9 @@ class TRTModule(torch.nn.Module):
         device = tuple(inputs.values())[0].device
 
         with torch.cuda.device(device):
-            __setup_inputs(inputs, bindings)
-            outputs = __setup_outputs(bindings)
-
-            self.context.execute_async_v2(
-                bindings,
+            __setup_inputs(inputs)
+            outputs = __setup_outputs()
+            self.context.execute_async_v3(
                 torch.cuda.current_stream().cuda_stream)
         return __get_return_value(outputs)
 
