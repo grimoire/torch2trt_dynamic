@@ -17,6 +17,7 @@ TORCH_TRT_DTYPE_MAP = {
     torch.bool: trt.bool,
     torch.int8: trt.int8,
     torch.int32: trt.int32,
+    torch.int64: trt.int32,
     torch.float16: trt.float16,
     torch.float32: trt.float32,
 }
@@ -532,6 +533,10 @@ class TRTModule(torch.nn.Module):
         inputs = self.signature.bind(*args, **kwargs).arguments
         inputs = dict(
             (name, tensor.contiguous()) for name, tensor in inputs.items())
+        for name, tensor in inputs.items():
+            if tensor.dtype == torch.int64:
+                tensor = tensor.to(torch.int32)
+                inputs[name] = tensor
         self._check_input_shape(inputs)
         return inputs
 

@@ -9,11 +9,13 @@ except Exception:
 
 from . import AdaptiveAvgPool2d  # noqa: F401
 from . import AdaptiveMaxPool2d  # noqa: F401
+from . import Embedding  # noqa: F401
 from . import adaptive_avg_pool1d  # noqa: F401
 from . import adaptive_avg_pool2d  # noqa: F401
 from . import adaptive_max_pool1d  # noqa: F401
 from . import adaptive_max_pool2d  # noqa: F401
 from . import add  # noqa: F401
+from . import gather  # noqa: F401
 from . import grid_sample  # noqa: F401
 from .activation import (convert_elu, convert_leaky_relu, convert_selu,
                          convert_softplus, convert_softsign)
@@ -340,8 +342,6 @@ try:
     from .cumprod import convert_cumprod
     from .cumsum import convert_cumsum
     from .deform_conv2d import convert_deform_conv2d
-    from .Embedding import convert_embedding, convert_embedding_forward
-    from .gather import convert_gather
     from . import GroupNorm  # noqa: F401
     from .nms import convert_nms
     from .roi_align import convert_roi_align, convert_RoiAlign
@@ -360,10 +360,6 @@ try:
     __all__ += ['convert_cumsum']
     # deform_conv2d
     __all__ += ['convert_deform_conv2d']
-    # Embedding
-    __all__ += ['convert_embedding', 'convert_embedding_forward']
-    # gather
-    __all__ += ['convert_gather']
     # nms
     __all__ += ['convert_nms']
     # roi_align
