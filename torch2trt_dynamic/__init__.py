@@ -2,6 +2,7 @@ import tensorrt as trt
 
 from .converters import *  # noqa: F401,F403
 from .torch2trt_dynamic import *  # noqa: F401,F403
+from .trt_module import TRTModule, TRTModuleMeta  # noqa: F401, F403
 
 
 def load_plugins():
