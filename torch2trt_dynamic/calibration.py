@@ -61,7 +61,7 @@ class DatasetCalibrator(trt.IInt8Calibrator):
             for name in names:
                 tensor = inputs[name]
                 if name not in self.buffers:
-                    self.buffers[name] = tensor.clone()
+                    self.buffers[name] = tensor.clone().cuda()
                 else:
                     buf = self.buffers[name]
                     assert buf.shape == tensor.shape
