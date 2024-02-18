@@ -1,43 +1,48 @@
+import inspect
+from dataclasses import dataclass
+from typing import Any, Dict, Sequence
+
 import numpy as np
 import tensorrt as trt
 import torch
-from packaging import version
 
 from .calibration import (DEFAULT_CALIBRATION_ALGORITHM, DatasetCalibrator,
-                          TensorBatchDataset)
+                          SequenceDataset)
 from .shape_converter import ShapeConverter
+from .torch_allocator import TorchAllocator
 
 # UTILITY FUNCTIONS
 
+TORCH_TRT_DTYPE_MAP = {
+    torch.bool: trt.bool,
+    torch.int8: trt.int8,
+    torch.int32: trt.int32,
+    torch.int64: trt.int32,
+    torch.float16: trt.float16,
+    torch.float32: trt.float32,
+}
+
+TRT_TORCH_DTYPE_MAP = {
+    trt.bool: torch.bool,
+    trt.int8: torch.int8,
+    trt.int32: torch.int32,
+    trt.float16: torch.float16,
+    trt.float32: torch.float32,
+}
+
 
 def torch_dtype_to_trt(dtype):
-    if dtype == torch.bool:
-        return trt.bool
-    elif dtype == torch.int8:
-        return trt.int8
-    elif dtype == torch.int32:
-        return trt.int32
-    elif dtype == torch.float16:
-        return trt.float16
-    elif dtype == torch.float32:
-        return trt.float32
+    if dtype in TORCH_TRT_DTYPE_MAP:
+        return TORCH_TRT_DTYPE_MAP[dtype]
     else:
-        raise TypeError('%s is not supported by tensorrt' % dtype)
+        raise TypeError(f'{dtype} is not supported by TensorRT')
 
 
 def torch_dtype_from_trt(dtype):
-    if dtype == trt.bool:
-        return torch.bool
-    elif dtype == trt.int8:
-        return torch.int8
-    elif dtype == trt.int32:
-        return torch.int32
-    elif dtype == trt.float16:
-        return torch.float16
-    elif dtype == trt.float32:
-        return torch.float32
+    if dtype in TRT_TORCH_DTYPE_MAP:
+        return TRT_TORCH_DTYPE_MAP[dtype]
     else:
-        raise TypeError('%s is not supported by torch' % dtype)
+        raise TypeError(f'{dtype} is not supported by PyTorch')
 
 
 def torch_device_to_trt(device):
@@ -46,7 +51,7 @@ def torch_device_to_trt(device):
     elif device.type == torch.device('cpu').type:
         return trt.TensorLocation.HOST
     else:
-        return TypeError('%s is not supported by tensorrt' % device)
+        return TypeError(f'{device} is not supported by TensorRT')
 
 
 def torch_device_from_trt(device):
@@ -55,7 +60,7 @@ def torch_device_from_trt(device):
     elif device == trt.TensorLocation.HOST:
         return torch.device('cpu')
     else:
-        return TypeError('%s is not supported by torch' % device)
+        return TypeError(f'{device} is not supported by PyTorch')
 
 
 def trt_num_inputs(engine):
@@ -284,7 +289,7 @@ def convert_with_args(ctx, convert_func, args, kw_args, returns):
 CONVERTERS = {}
 
 
-def get_arg(ctx, name, pos, default):
+def get_arg(ctx, name, pos, default=None):
     if name in ctx.method_kwargs:
         return ctx.method_kwargs[name]
     elif len(ctx.method_args) > pos:
@@ -385,109 +390,363 @@ class ConversionContext(object):
         for hook in self.hooks:
             hook.__exit__(type, val, tb)
 
-    def add_inputs(self, torch_inputs, names=None, opt_shape_param=None):
-        if names is None:
-            names = ['input_%d' % i for i in range(len(torch_inputs))]
-        self.input_names = names
+    def add_inputs(self, torch_inputs: Dict, shape_ranges: Dict):
 
-        for i, torch_input in enumerate(torch_inputs):
-            if not hasattr(torch_input, '_trt'):
-                if opt_shape_param is not None:
-                    # input_shape = (-1,)*len(torch_input.shape)
-                    input_shape = []
-                    for idx in range(len(torch_input.shape)):
-                        if opt_shape_param[i][0][idx] == opt_shape_param[i][1][
-                                idx] == opt_shape_param[i][2][idx]:
-                            input_shape.append(torch_input.shape[idx])
-                        else:
-                            input_shape.append(-1)
-                    input_shape = tuple(input_shape)
-                else:
-                    input_shape = tuple(torch_input.shape)
+        def __get_input_shape(shape_range: Dict):
+            min_shape = np.array(shape_range['min'])
+            opt_shape = np.array(shape_range['opt'])
+            max_shape = np.array(shape_range['max'])
+            eq_mask = (min_shape == opt_shape) & (opt_shape == max_shape)
+            input_shape = np.where(eq_mask, opt_shape, -1)
+            return tuple(input_shape.tolist())
 
-                trt_tensor = self.network.add_input(
-                    name=names[i],
-                    shape=input_shape,
-                    dtype=torch_dtype_to_trt(torch_input.dtype),
-                )
-                trt_tensor.location = torch_device_to_trt(torch_input.device)
-                torch_input._trt = trt_tensor
+        self.input_names = list(torch_inputs.keys())
 
-    def mark_outputs(self, torch_outputs, names=None):
-        if names is None:
-            names = ['output_%d' % i for i in range(len(torch_outputs))]
-        self.output_names = names
+        for name, tensor in torch_inputs.items():
+            if hasattr(tensor, '_trt'):
+                continue
+            input_shape = __get_input_shape(shape_ranges[name])
 
-        for i, torch_output in enumerate(torch_outputs):
-            trt_tensor = torch_output._trt
-            trt_tensor.name = names[i]
-            trt_tensor.location = torch_device_to_trt(torch_output.device)
-            # if not support_dynamic_shape:
-            #     trt_tensor.dtype = torch_dtype_to_trt(torch_output.dtype)
+            trt_tensor = self.network.add_input(
+                name=name,
+                shape=input_shape,
+                dtype=torch_dtype_to_trt(tensor.dtype),
+            )
+            trt_tensor.location = torch_device_to_trt(tensor.device)
+            tensor._trt = trt_tensor
+
+    def mark_outputs(self, torch_outputs):
+        if isinstance(torch_outputs, torch.Tensor):
+            output_names = ['_output']
+            torch_outputs = {output_names[0]: torch_outputs}
+            output_type = 'tensor'
+        elif isinstance(torch_outputs, Sequence):
+            output_names = [
+                '_output_%d' % i for i in range(len(torch_outputs))
+            ]
+            torch_outputs = {
+                name: output
+                for name, output in zip(output_names, torch_outputs)
+            }
+            output_type = 'list'
+        elif isinstance(torch_outputs, Dict):
+            output_names = list(torch_outputs.keys())
+            output_type = 'dict'
+        else:
+            raise TypeError('Unsupported output type: '
+                            f'{type(torch_outputs)}')
+
+        self.output_names = output_names
+        self.output_type = output_type
+
+        for name, tensor in torch_outputs.items():
+            trt_tensor = tensor._trt
+            trt_tensor.name = name
+            trt_tensor.location = torch_device_to_trt(tensor.device)
             self.network.mark_output(trt_tensor)
+
+        return self.output_names, self.output_type
+
+
+@dataclass
+class TRTModuleMeta:
+    signature: inspect.Signature
+    input_names: Sequence[str]
+    output_names: Sequence[str]
+    output_type: str
 
 
 class TRTModule(torch.nn.Module):
 
-    def __init__(self, engine=None, input_names=None, output_names=None):
+    def __init__(self, engine=None, meta: TRTModuleMeta = None):
         super(TRTModule, self).__init__()
         self._register_state_dict_hook(TRTModule._on_state_dict)
-        self.engine = engine
-        if self.engine is not None:
-            self.context = self.engine.create_execution_context()
+        if engine is not None:
+            self._build_module(engine, meta)
 
-        self.input_names = input_names
-        self.output_names = output_names
+    def _build_module(self, engine, meta: TRTModuleMeta):
+        assert engine is not None
+        assert meta is not None
+        self.engine = engine
+        self.meta = meta
+        self.update_context()
 
     def _on_state_dict(self, state_dict, prefix, local_metadata):
         state_dict[prefix + 'engine'] = bytearray(self.engine.serialize())
-        state_dict[prefix + 'input_names'] = self.input_names
-        state_dict[prefix + 'output_names'] = self.output_names
+        state_dict[prefix + 'meta'] = self.meta
 
     def _load_from_state_dict(self, state_dict, prefix, local_metadata, strict,
                               missing_keys, unexpected_keys, error_msgs):
         engine_bytes = state_dict[prefix + 'engine']
+        self.meta = state_dict[prefix + 'meta']
 
-        with trt.Logger() as logger, trt.Runtime(logger) as runtime:
-            self.engine = runtime.deserialize_cuda_engine(engine_bytes)
-            self.context = self.engine.create_execution_context()
+        logger = trt.Logger()
+        runtime = trt.Runtime(logger)
+        self.engine = runtime.deserialize_cuda_engine(engine_bytes)
+        self.update_context()
 
-        self.input_names = state_dict[prefix + 'input_names']
-        self.output_names = state_dict[prefix + 'output_names']
+    def update_context(self):
+        self.context = self.engine.create_execution_context()
+        self.allocator = TorchAllocator()
+        if hasattr(self.context, 'temporary_allocator'):
+            self.context.temporary_allocator = self.allocator
 
-    def forward(self, *inputs):
-        bindings = [None] * (len(self.input_names) + len(self.output_names))
+    @property
+    def input_names(self):
+        return self.meta.input_names
 
-        for i, input_name in enumerate(self.input_names):
-            idx = self.engine.get_binding_index(input_name)
+    @property
+    def output_names(self):
+        return self.meta.output_names
 
-            self.context.set_binding_shape(idx, tuple(inputs[i].shape))
-            bindings[idx] = inputs[i].contiguous().data_ptr()
+    @property
+    def signature(self):
+        return self.meta.signature
 
-        # create output tensors
-        outputs = [None] * len(self.output_names)
-        for i, output_name in enumerate(self.output_names):
-            idx = self.engine.get_binding_index(output_name)
-            dtype = torch_dtype_from_trt(self.engine.get_binding_dtype(idx))
-            shape = tuple(self.context.get_binding_shape(idx))
+    @property
+    def output_type(self):
+        return self.meta.output_type
 
-            device = torch_device_from_trt(self.engine.get_location(idx))
-            output = torch.empty(size=shape, dtype=dtype, device=device)
-            outputs[i] = output
-            bindings[idx] = output.data_ptr()
+    def _check_input_shape(self, inputs: Dict):
 
-        self.context.execute_async_v2(bindings,
-                                      torch.cuda.current_stream().cuda_stream)
+        def __check_range(name, shape, min_shape, max_shape):
+            shape = np.array(shape)
+            min_shape = np.array(min_shape)
+            max_shape = np.array(max_shape)
+            if not (min_shape <= shape).all():
+                raise ValueError(f'input <{name}> shape: {shape} '
+                                 f'is less than min shape: {min_shape}')
+            if not (shape <= max_shape).all():
+                raise ValueError(f'input <{name}> shape: {shape} '
+                                 f'is greater than max shape: {max_shape}')
 
-        outputs = tuple(outputs)
-        if len(outputs) == 1:
-            outputs = outputs[0]
+        for name, tensor in inputs.items():
+            shape = tensor.shape
+            input_shapes = self.engine.get_tensor_profile_shape(name, 0)
+            min_shape, opt_shape, max_shape = input_shapes
+            assert len(shape) == len(opt_shape), (
+                f'input <{name}> dimension mismatch: ',
+                f'expected {len(opt_shape)}, got {len(shape)}')
+            __check_range(name, shape, min_shape, max_shape)
 
-        return outputs
+    def _bind_inputs(self, *args, **kwargs):
+        inputs = self.signature.bind(*args, **kwargs).arguments
+        inputs = dict(
+            (name, tensor.contiguous()) for name, tensor in inputs.items())
+        for name, tensor in inputs.items():
+            if tensor.dtype == torch.int64:
+                tensor = tensor.to(torch.int32)
+                inputs[name] = tensor
+        self._check_input_shape(inputs)
+        return inputs
+
+    def forward(self, *args, **kwargs):
+
+        def __setup_inputs(inputs: Dict):
+            for input_name, tensor in inputs.items():
+                self.context.set_input_shape(input_name, tuple(tensor.shape))
+                self.context.set_tensor_address(input_name, tensor.data_ptr())
+
+        def __setup_outputs():
+            outputs = dict()
+            for output_name in self.output_names:
+                dtype = torch_dtype_from_trt(
+                    self.engine.get_tensor_dtype(output_name))
+                shape = tuple(self.context.get_tensor_shape(output_name))
+                device = torch_device_from_trt(
+                    self.engine.get_tensor_location(output_name))
+                output = torch.empty(size=shape, dtype=dtype, device=device)
+                outputs[output_name] = output
+                self.context.set_tensor_address(output_name, output.data_ptr())
+            return outputs
+
+        def __get_return_value(outputs: Dict):
+            if self.output_type == 'tensor':
+                return outputs['_output']
+            elif self.output_type == 'list':
+                return [outputs[name] for name in self.output_names]
+            elif self.output_type == 'dict':
+                return outputs
+            else:
+                raise TypeError('Unsupported output type: '
+                                f'{self.output_type}')
+
+        inputs = self._bind_inputs(*args, **kwargs)
+        device = tuple(inputs.values())[0].device
+
+        with torch.cuda.device(device):
+            __setup_inputs(inputs)
+            outputs = __setup_outputs()
+            self.context.execute_async_v3(
+                torch.cuda.current_stream().cuda_stream)
+        return __get_return_value(outputs)
 
     def enable_profiling(self):
         if not self.context.profiler:
             self.context.profiler = trt.Profiler()
+
+
+@dataclass
+class BuildEngineConfig:
+    shape_ranges: Dict = None
+    pool: trt.MemoryPoolType = trt.MemoryPoolType.WORKSPACE
+    pool_size: int = None
+    fp16: bool = False
+    int8: bool = False
+    int8_calib_dataset: Any = None
+    int8_calib_algorithm: trt.CalibrationAlgoType = None
+    int8_batch_size: int = 1
+    int8_cache_file: str = None
+    int8_calibrator: Any = None
+
+    def __post_init__(self):
+        if self.int8_calib_algorithm is None:
+            self.int8_calib_algorithm = DEFAULT_CALIBRATION_ALGORITHM
+
+
+def _default_shape_ranges(inputs: Dict):
+    shape_ranges = dict()
+    for name, tensor in inputs.items():
+        shape_ranges[name] = dict(
+            min=tuple(tensor.shape),
+            opt=tuple(tensor.shape),
+            max=tuple(tensor.shape))
+    return shape_ranges
+
+
+def build_network(builder: trt.Builder,
+                  func: Any,
+                  inputs: Dict,
+                  config: BuildEngineConfig = None):
+    """build trt network"""
+    EXPLICIT_BATCH = 1 << (int)(
+        trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
+    network = builder.create_network(EXPLICIT_BATCH)
+
+    if config is None:
+        config = BuildEngineConfig()
+
+    shape_ranges = config.shape_ranges
+    if shape_ranges is None:
+        shape_ranges = _default_shape_ranges(inputs)
+
+    with ShapeConverter(), ConversionContext(network) as ctx:
+        ctx.add_inputs(inputs, shape_ranges)
+        outputs = func(**inputs)
+        output_names, output_type = ctx.mark_outputs(outputs)
+        torch.cuda.empty_cache()
+
+    signature = inspect.signature(func)
+    input_names = list(inputs.keys())
+    module_meta = TRTModuleMeta(
+        signature=signature,
+        input_names=input_names,
+        output_names=output_names,
+        output_type=output_type)
+    return network, module_meta
+
+
+def build_engine(func: Any,
+                 inputs: Dict,
+                 config: BuildEngineConfig = None,
+                 log_level: trt.Logger = trt.Logger.ERROR):
+    """build TensorRT Engine"""
+
+    def __make_profile(builder: trt.Builder, shape_ranges: Dict):
+        profile = builder.create_optimization_profile()
+        for name, shape_range in shape_ranges.items():
+            min_shape = shape_range['min']
+            opt_shape = shape_range['opt']
+            max_shape = shape_range['max']
+            profile.set_shape(name, min_shape, opt_shape, max_shape)
+        return profile
+
+    def __setup_fp16(builder_config):
+        if config.fp16:
+            builder_config.set_flag(trt.BuilderFlag.FP16)
+
+    def __setup_int8(builder_config, profile):
+        if not config.int8:
+            return
+        builder_config.set_flag(trt.BuilderFlag.INT8)
+        if config.int8_calibrator is not None:
+            builder_config.int8_calibrator = config.int8_calibrator
+        else:
+            int8_calib_dataset = config.int8_calib_dataset
+            if int8_calib_dataset is None:
+                int8_calib_dataset = SequenceDataset([inputs] * 10)
+            builder_config.int8_calibrator = DatasetCalibrator(
+                int8_calib_dataset,
+                batch_size=config.int8_batch_size,
+                cache_file=config.int8_cache_file,
+                algorithm=config.int8_calib_algorithm)
+        builder_config.set_calibration_profile(profile)
+
+    def __make_builder_config(builder: trt.Builder, shape_ranges: Dict):
+        builder_config = builder.create_builder_config()
+        if config.pool_size is not None:
+            builder_config.set_memory_pool_limit(config.pool, config.pool_size)
+        profile = __make_profile(builder, shape_ranges)
+        builder_config.add_optimization_profile(profile)
+
+        __setup_fp16(builder_config)
+        __setup_int8(builder_config, profile)
+        return builder_config
+
+    if config is None:
+        config = BuildEngineConfig()
+
+    shape_ranges = config.shape_ranges
+    if shape_ranges is None:
+        shape_ranges = _default_shape_ranges(inputs)
+
+    logger = trt.Logger(log_level)
+    builder = trt.Builder(logger)
+    network, module_meta = build_network(builder, func, inputs, config=config)
+    builder_config = __make_builder_config(builder, shape_ranges)
+    host_mem = builder.build_serialized_network(network, builder_config)
+    if host_mem is None:
+        raise RuntimeError('Failed to build TensorRT engine')
+
+    runtime = trt.Runtime(logger)
+    engine = runtime.deserialize_cuda_engine(host_mem)
+
+    if engine is None:
+        raise RuntimeError('Failed to build TensorRT engine')
+    return engine, module_meta
+
+
+def func2trt(func: Any,
+             args: Sequence = None,
+             kwargs: Dict = None,
+             config: BuildEngineConfig = None,
+             log_level: trt.Logger = trt.Logger.ERROR):
+    """convert callable object to TensorRT module"""
+
+    def __bind_inputs(signature: inspect.Signature):
+        nonlocal args, kwargs
+        if args is None:
+            args = list()
+        if kwargs is None:
+            kwargs = dict()
+        return signature.bind(*args, **kwargs).arguments
+
+    signature = inspect.signature(func)
+    inputs = __bind_inputs(signature)
+    engine, module_meta = build_engine(func, inputs, config, log_level)
+
+    trt_module = TRTModule(engine, module_meta)
+    return trt_module
+
+
+def module2trt(module: Any,
+               args: Sequence = None,
+               kwargs: Dict = None,
+               config: BuildEngineConfig = None,
+               log_level: trt.Logger = trt.Logger.ERROR):
+    """convert torch.nn.Module to TensorRT module"""
+    return func2trt(
+        module.forward, args, kwargs, config=config, log_level=log_level)
 
 
 def torch2trt_dynamic(module,
@@ -497,96 +756,38 @@ def torch2trt_dynamic(module,
                       log_level=trt.Logger.ERROR,
                       max_batch_size=1,
                       fp16_mode=False,
-                      max_workspace_size=0,
+                      max_workspace_size=None,
                       opt_shape_param=None,
                       strict_type_constraints=False,
                       keep_network=True,
                       int8_mode=False,
                       int8_calib_dataset=None,
                       int8_calib_algorithm=DEFAULT_CALIBRATION_ALGORITHM):
+    print('Warning, torch2trt_dynamic is deprecated, use module2trt instead')
 
-    inputs_in = inputs
+    signature = inspect.signature(module.forward)
+    input_names = signature.parameters.keys()
+    input_names = list(input_names)[:len(inputs)]
 
-    # copy inputs to avoid modifications to source data
-    inputs = [tensor.clone() for tensor in inputs]
+    shape_ranges = None
+    if opt_shape_param is not None:
+        shape_ranges = dict()
+        for i, param in enumerate(opt_shape_param):
+            name = input_names[i]
+            min_shape, opt_shape, max_shape = param
+            shape_ranges[name] = dict(
+                min=min_shape, opt=opt_shape, max=max_shape)
 
-    logger = trt.Logger(log_level)
-    builder = trt.Builder(logger)
-    EXPLICIT_BATCH = 1 << (int)(
-        trt.NetworkDefinitionCreationFlag.EXPLICIT_BATCH)
-    network = builder.create_network(EXPLICIT_BATCH)
-
-    with ShapeConverter(), ConversionContext(network) as ctx:
-
-        if isinstance(inputs, list):
-            inputs = tuple(inputs)
-        if not isinstance(inputs, tuple):
-            inputs = (inputs, )
-        ctx.add_inputs(inputs, input_names, opt_shape_param)
-
-        outputs = module(*inputs)
-
-        if not isinstance(outputs, tuple) and not isinstance(outputs, list):
-            outputs = (outputs, )
-        ctx.mark_outputs(outputs, output_names)
-
-        torch.cuda.empty_cache()
-
-        if version.parse(trt.__version__) < version.parse('8'):
-            builder.max_workspace_size = max_workspace_size
-            builder.max_batch_size = max_batch_size
-            builder.strict_type_constraints = strict_type_constraints
-
-        config = builder.create_builder_config()
-        config.max_workspace_size = max_workspace_size
-        profile = builder.create_optimization_profile()
-
-        if input_names is None:
-            input_names = ['input_%d' % i for i in range(len(inputs))]
-        for input_index, input_tensor in enumerate(inputs):
-            if opt_shape_param is not None:
-                min_shape = tuple(opt_shape_param[input_index][0][:])
-                opt_shape = tuple(opt_shape_param[input_index][1][:])
-                max_shape = tuple(opt_shape_param[input_index][2][:])
-            else:
-                opt_shape = tuple(input_tensor.shape)
-                min_shape = opt_shape
-                max_shape = opt_shape
-            profile.set_shape(input_names[input_index], min_shape, opt_shape,
-                              max_shape)
-        config.add_optimization_profile(profile)
-
-    if fp16_mode:
-        if version.parse(trt.__version__) < version.parse('8'):
-            builder.fp16_mode = fp16_mode
-        config.set_flag(trt.BuilderFlag.FP16)
-
-    if int8_mode:
-        # default to use input tensors for calibration
-        if int8_calib_dataset is None:
-            int8_calib_dataset = TensorBatchDataset(inputs_in)
-
-        config.set_flag(trt.BuilderFlag.INT8)
-        config.int8_calibrator = DatasetCalibrator(
-            input_names,
-            profile,
-            inputs_in,
-            int8_calib_dataset,
-            batch_size=opt_shape[0],
-            algorithm=int8_calib_algorithm)
-        config.set_calibration_profile(profile)
-        if version.parse(trt.__version__) < version.parse('8'):
-            builder.int8_mode = int8_mode
-            builder.int8_calibrator = config.int8_calibrator
-
-    engine = builder.build_engine(network, config)
-
-    module_trt = TRTModule(engine, ctx.input_names, ctx.output_names)
-
-    if keep_network:
-        module_trt.network = network
-
-    return module_trt
+    config = BuildEngineConfig(
+        shape_ranges=shape_ranges,
+        pool_size=max_workspace_size,
+        fp16=fp16_mode,
+        int8=int8_mode,
+        int8_calib_dataset=int8_calib_dataset,
+        int8_calib_algorithm=int8_calib_algorithm,
+        int8_batch_size=max_batch_size,
+    )
+    return module2trt(module, args=inputs, config=config, log_level=log_level)
 
 
 # DEFINE ALL CONVERSION FUNCTIONS

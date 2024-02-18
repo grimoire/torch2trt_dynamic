@@ -1,5 +1,7 @@
+import os
+from typing import Tuple
+
 import tensorrt as trt
-import torch
 
 if trt.__version__ >= '5.1':
     DEFAULT_CALIBRATION_ALGORITHM = \
@@ -20,57 +22,53 @@ class TensorBatchDataset():
         return [t[idx] for t in self.tensors]
 
 
+class SequenceDataset():
+
+    def __init__(self, sequences):
+        self.sequences = sequences
+
+    def __len__(self):
+        return len(self.sequences)
+
+    def __getitem__(self, idx):
+        return self.sequences[idx]
+
+
+ShapeType = Tuple[int, ...]
+
+
 class DatasetCalibrator(trt.IInt8Calibrator):
 
     def __init__(self,
-                 names,
-                 profile,
-                 inputs,
                  dataset,
                  batch_size=1,
+                 cache_file: str = None,
                  algorithm=DEFAULT_CALIBRATION_ALGORITHM):
         super(DatasetCalibrator, self).__init__()
 
         self.dataset = dataset
         self.batch_size = batch_size
         self.algorithm = algorithm
-        self.names = names
-        self.device = inputs[0].device
+        self.cache_file = cache_file
 
         # create buffers that will hold data batches
-        self.buffers = []
-        if isinstance(inputs, torch.Tensor):
-            inputs = [inputs]
-        for name, tensor in zip(names, inputs):
-            size = tuple(profile.get_shape(name)[1])
-            buf = torch.zeros(
-                size=size, dtype=tensor.dtype,
-                device=tensor.device).contiguous()
-            self.buffers.append(buf)
+        self.buffers = dict()
+        self.dataset_iter = iter(dataset)
 
-        self.count = 0
-
-    def get_batch(self, *args, **kwargs):
-        if self.count < len(self.dataset):
-
-            for i in range(self.batch_size):
-
-                idx = self.count % len(
-                    self.dataset)  # roll around if not multiple of dataset
-                inputs = self.dataset[idx]
-                if isinstance(inputs, torch.Tensor):
-                    inputs = [inputs]
-
-                # copy data for (input_idx, dataset_idx) into buffer
-                for buffer, tensor in zip(self.buffers, inputs):
-                    tensor = tensor.to(self.device)
-                    buffer[i].copy_(tensor)
-
-                self.count += 1
-
-            return [int(buf.data_ptr()) for buf in self.buffers]
-        else:
-            return []
+    def get_batch(self, names):
+        try:
+            inputs = next(self.dataset_iter)
+            for name in names:
+                tensor = inputs[name]
+                if name not in self.buffers:
+                    self.buffers[name] = tensor.clone().cuda()
+                else:
+                    buf = self.buffers[name]
+                    assert buf.shape == tensor.shape
+                    buf.copy_(tensor)
+            return [int(self.buffers[name].data_ptr()) for name in names]
+        except StopIteration:
+            return list()
 
     def get_algorithm(self):
         return self.algorithm
@@ -78,8 +76,15 @@ class DatasetCalibrator(trt.IInt8Calibrator):
     def get_batch_size(self):
         return self.batch_size
 
-    def read_calibration_cache(self, *args, **kwargs):
-        return None
+    def read_calibration_cache(self):
+        if self.cache_file is None:
+            return
+        if os.path.exists(self.cache_file):
+            with open(self.cache_file, 'rb') as f:
+                return f.read()
 
-    def write_calibration_cache(self, cache, *args, **kwargs):
-        pass
+    def write_calibration_cache(self, cache):
+        if self.cache_file is None:
+            return
+        with open(self.cache_file, 'wb') as f:
+            f.write(cache)

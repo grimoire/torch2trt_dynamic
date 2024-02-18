@@ -1,7 +1,16 @@
 import tensorrt as trt
 
-from ..plugins import create_gridsample_plugin
 from ..torch2trt_dynamic import get_arg, tensorrt_converter, trt_
+
+_MODE_MAP = dict(
+    bilinear=trt.ResizeMode.LINEAR,
+    nearest=trt.ResizeMode.NEAREST,
+    bicubic=trt.ResizeMode.CUBIC)
+
+_PAD_MODE_MAP = dict(
+    zeros=trt.SampleMode.FILL,
+    border=trt.SampleMode.CLAMP,
+    reflection=trt.SampleMode.REFLECT)
 
 
 @tensorrt_converter('torch.nn.functional.grid_sample')
@@ -17,25 +26,12 @@ def convert_grid_sample(ctx):
     input_trt = trt_(ctx.network, input)
     grid_trt = trt_(ctx.network, grid)
 
-    if mode == 'bilinear':
-        mode = trt.ResizeMode.LINEAR
-    elif mode == 'nearest':
-        mode = trt.ResizeMode.NEAREST
+    mode = _MODE_MAP[mode]
+    padding_mode = _PAD_MODE_MAP[padding_mode]
 
-    if padding_mode == 'zeros':
-        padding_mode = 0
-    elif padding_mode == 'border':
-        padding_mode = 1
-    elif padding_mode == 'reflection':
-        padding_mode = 2
-
-    plugin = create_gridsample_plugin(
-        'torch_gridsample_' + str(id(input)),
-        mode=mode,
-        padding_mode=padding_mode,
-        align_corners=align_corners)
-
-    layer = ctx.network.add_plugin_v2(
-        inputs=[input_trt, grid_trt], plugin=plugin)
+    layer = ctx.network.add_grid_sample(input_trt, grid_trt)
+    layer.interpolation_mode = mode
+    layer.sample_mode = padding_mode
+    layer.align_corners = align_corners
 
     output._trt = layer.get_output(0)

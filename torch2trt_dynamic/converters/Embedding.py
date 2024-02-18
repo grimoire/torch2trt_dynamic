@@ -1,5 +1,18 @@
-from ..plugins import create_torchembedding_plugin
+import tensorrt as trt
+
 from ..torch2trt_dynamic import get_arg, tensorrt_converter, trt_
+
+
+def _update_weight(weight, max_norm, norm_type):
+    if max_norm is None:
+        return weight
+    num_embeddings = weight.shape[0]
+    for emb_id in range(num_embeddings):
+        norm = weight[emb_id].norm(norm_type)
+        if norm > max_norm:
+            scale = max_norm / (norm + 1e-7)
+            weight[emb_id] = weight[emb_id] * scale
+    return weight
 
 
 @tensorrt_converter('torch.nn.Embedding.forward')
@@ -22,24 +35,14 @@ def convert_embedding(ctx):
     norm_type = get_arg(ctx, 'norm_type', pos=4, default=2)
     output = ctx.method_return
 
-    if max_norm is not None:
-        num_embeddings = weight.shape[0]
-        for emb_id in range(num_embeddings):
-            norm = weight[emb_id].norm(norm_type)
-            if norm > max_norm:
-                scale = max_norm / (norm + 1e-7)
-                weight[emb_id] = weight[emb_id] * scale
-
+    weight = _update_weight(weight, max_norm, norm_type)
     if padding_idx is not None:
         weight[padding_idx, :] = 0
 
     input_trt = trt_(ctx.network, input)
     weight_trt = trt_(ctx.network, weight)
-
-    plugin = create_torchembedding_plugin(
-        'torch_gather_' + str(id(input)), weight=weight)
-
-    layer = ctx.network.add_plugin_v2(
-        inputs=[input_trt, weight_trt], plugin=plugin)
+    layer = ctx.network.add_gather_v2(weight_trt, input_trt,
+                                      trt.GatherMode.DEFAULT)
+    layer.axis = 0
 
     output._trt = layer.get_output(0)

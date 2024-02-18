@@ -1,4 +1,5 @@
-from ..plugins import create_torchgather_plugin
+import tensorrt as trt
+
 from ..torch2trt_dynamic import get_arg, tensorrt_converter, trt_
 
 
@@ -13,10 +14,9 @@ def convert_gather(ctx):
     inputs_trt = trt_(ctx.network, inputs)
     index_trt = trt_(ctx.network, index)
 
-    plugin = create_torchgather_plugin(
-        'torch_gather_' + str(id(inputs)), dim=dim)
-
-    layer = ctx.network.add_plugin_v2(
-        inputs=[inputs_trt, index_trt], plugin=plugin)
+    layer = ctx.network.add_gather_v2(inputs_trt, index_trt,
+                                      trt.GatherMode.ELEMENT)
+    layer.num_elementwise_dims = 0
+    layer.axis = dim
 
     output._trt = layer.get_output(0)

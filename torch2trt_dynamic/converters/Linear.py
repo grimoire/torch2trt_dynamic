@@ -21,7 +21,7 @@ def convert_Linear(ctx):
     if module.bias is not None:
         bias = module.bias.detach().cpu().numpy()
 
-    layer = ctx.network.add_convolution(
+    layer = ctx.network.add_convolution_nd(
         input=layer.get_output(0),
         num_output_maps=module.out_features,
         kernel_shape=(1, 1),
