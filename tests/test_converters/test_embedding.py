@@ -35,8 +35,7 @@ class TestGather:
     def test_gather(self, input, dim, num):
         model = _TestModel(num, dim).eval().cuda()
         dummy_input = torch.zeros_like(input)
-        trt_model = module2trt(model,
-                               args=[dummy_input])
+        trt_model = module2trt(model, args=[dummy_input])
 
         with torch.inference_mode():
             gt = model(input)

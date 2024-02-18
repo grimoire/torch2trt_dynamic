@@ -1,30 +1,64 @@
 import tensorrt as trt
 import torch
 from torch2trt_dynamic.module_test import add_module_test
-from torch2trt_dynamic.torch2trt_dynamic import (get_arg, tensorrt_converter,
-                                                 trt_)
+from torch2trt_dynamic.torch2trt_dynamic import (bind_arguments,
+                                                 tensorrt_converter, trt_)
+
+from .size import IntWarper
+
+
+def _dummy_topk(input, k, dim=None, largest=True, sorted=True, *, out=None):
+    pass
 
 
 @tensorrt_converter('torch.topk')
 @tensorrt_converter('torch.Tensor.topk')
 def convert_topk(ctx):
+    arguments = bind_arguments(_dummy_topk, ctx)
+    input = arguments['input']
+    k = arguments['k']
+    dim = arguments['dim']
+    largest = arguments['largest']
 
-    input = ctx.method_args[0]
+    if dim is None:
+        dim = len(input.shape) - 1
+    if dim < 0:
+        dim = len(input.shape) + dim
 
-    k = get_arg(ctx, 'k', pos=1, default=1)
-    axis = get_arg(ctx, 'dim', pos=2, default=len(input.shape) - 1)
-    if axis is None:
-        axis = len(input.shape) - 1
-    if axis < 0:
-        axis = len(input.shape) + axis
+    def __add_unsqueeze_layer(input_trt, dim):
+        layer = ctx.network.add_shuffle(input_trt)
+        layer.reshape_dims = (1, ) + tuple(input_trt.shape)
+        input_trt = layer.get_output(0)
+        dim += 1
+        return input_trt, dim
 
-    if k > 3840:
-        print('warning: topk = ' + k +
-              ' > 3840 is not allowed in TensorRT, use 3840 instead.')
-        k = 3840
+    def __add_topk_layer(k, dim):
+        topkOp = trt.TopKOperation.MAX if largest else trt.TopKOperation.MIN
 
-    largest = get_arg(ctx, 'largest', pos=3, default=True)
-    topkOp = trt.TopKOperation.MAX if largest else trt.TopKOperation.MIN
+        k_trt = None
+        if isinstance(k, IntWarper):
+            k_trt = trt_(ctx.network, k)
+            layer = ctx.network.add_shuffle(k_trt)
+            layer.reshape_dims = tuple()
+            k_trt = layer.get_output(0)
+
+        if isinstance(k, int) and k > 3840:
+            print('Clamp k to 3840.')
+            k = 3840
+
+        layer = ctx.network.add_topk(input_trt, topkOp, k, 1 << dim)
+
+        if k_trt is not None:
+            layer.set_input(1, k_trt)
+
+        output0_trt = layer.get_output(0)
+        output1_trt = layer.get_output(1)
+        return output0_trt, output1_trt
+
+    def __add_squeeze_layer(output_trt):
+        layer = ctx.network.add_shuffle(output_trt)
+        layer.reshape_dims = tuple(output_trt.shape)[1:]
+        return layer.get_output(0)
 
     input_trt = trt_(ctx.network, input)
     output = ctx.method_return
@@ -32,25 +66,14 @@ def convert_topk(ctx):
     # can only use topk on dim>=2
     need_unsqueeze = len(input_trt.shape) == 1
     if need_unsqueeze:
-        layer = ctx.network.add_shuffle(input_trt)
-        layer.reshape_dims = (1, ) + tuple(input_trt.shape)
-        input_trt = layer.get_output(0)
-        axis += 1
+        input_trt, dim = __add_unsqueeze_layer(input_trt, dim)
 
-    layer = ctx.network.add_topk(input_trt, topkOp, k, 1 << axis)
-
-    output0_trt = layer.get_output(0)
-    output1_trt = layer.get_output(1)
+    output0_trt, output1_trt = __add_topk_layer(k, dim)
 
     # recovery
     if need_unsqueeze:
-        layer = ctx.network.add_shuffle(output0_trt)
-        layer.reshape_dims = tuple(output0_trt.shape)[1:]
-        output0_trt = layer.get_output(0)
-
-        layer = ctx.network.add_shuffle(output1_trt)
-        layer.reshape_dims = tuple(output1_trt.shape)[1:]
-        output1_trt = layer.get_output(0)
+        output0_trt = __add_squeeze_layer(output0_trt)
+        output1_trt = __add_squeeze_layer(output1_trt)
 
     output[0]._trt = output0_trt
     output[1]._trt = output1_trt

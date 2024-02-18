@@ -34,8 +34,7 @@ class TestGather:
         model = _TestModel(dim)
         dummy_input = torch.zeros_like(input)
         dummy_index = torch.zeros_like(index)
-        trt_model = module2trt(model,
-                               args=[dummy_input, dummy_index])
+        trt_model = module2trt(model, args=[dummy_input, dummy_index])
 
         with torch.inference_mode():
             gt = model(input, index)
